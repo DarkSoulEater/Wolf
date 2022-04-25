@@ -1,0 +1,7 @@
+%%
+    <ID>
+    <Digit>
+%%
+
+<Rule> :  <ID>
+        | "\"" <AnySymbol> "\""

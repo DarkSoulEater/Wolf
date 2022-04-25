@@ -1,0 +1,14 @@
+// Lexer
+<Letter> : "a" - "z" | "A" - "Z" | "_"
+<Digit> : "0" - "9"
+<Word> : <Letter> | <Word> (<Digit>, <Letter>)
+<ID> : "<" <Word> ">"
+
+// Parser 
+<G> : "%%" <Rules> "%%" <G> | <NONE>
+
+<Rules> : <Rule> <Rules> | <Rule>
+<Rule> : <ID> ":" <Depends>
+
+<Depends> : <Depend> "|" <Depends> | <Depend>
+<Depend> : <ID> <Depend> | <Letter> <Depend> | <ID> | <Letter>

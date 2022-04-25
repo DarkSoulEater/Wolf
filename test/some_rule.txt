@@ -1,0 +1,8 @@
+<dawd> : <awdawd>  | <awdaW> <daw> | <daw> <dawdaw> | <dawd>
+;
+
+<awd> : <Daw>
+;
+
+<exp> : <exp> '+' <exp> | <exp> '-' <exp> | <exp> '*' <exp>
+;
