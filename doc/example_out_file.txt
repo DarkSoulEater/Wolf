@@ -1,0 +1,54 @@
+/* This code is generated automatically
+ *
+ */
+
+#include "WolfCore.hpp"
+
+/*
+ * Preambula
+ */
+
+// Wolf types
+enum wTokenType {
+    // Some
+}
+
+union wTokenUnion {
+    // Some
+}
+
+// Rules
+wToken wParser::GetRule1() {
+
+}
+
+wToken wParser::GetRule2() {
+
+}
+
+/*
+.....
+ */
+
+wToken wParser::GetRuleN() {
+
+}
+
+wToken wParser::GetStartRule() {
+
+}
+
+wToken StartParse() {
+    return GetStartRule();
+}
+
+// ---------------------------------------------------------------
+// WoldCore.hpp
+
+enum wTokenType;
+union wTokenUnion;
+
+struct wToken {
+
+};
+

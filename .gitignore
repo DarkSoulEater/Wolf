@@ -36,3 +36,8 @@
 bulid-debug
 build-release
 bin
+doc/dump
+doc/res
+tasks
+prototype
+src/main0.cpp

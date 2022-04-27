@@ -1,0 +1,14 @@
+<dawd> : <awdawd>  | <awdaW> <daw> | <daw> <dawdaw> | <dawd>
+;
+
+<awd> : <Daw>
+;
+
+<exp> : <exp> '+' <exp> {
+    Print("Hello world\n");
+    } | <exp> '-' <exp> 
+      | <exp> '*' <exp> {
+    Print("World hello");
+    }
+     | <exp> '(' <exp> ')'
+;

@@ -7,291 +7,298 @@
 #include "Tree.hpp"
 #include "Generator.hpp"
 
-template<typename RetT, typename Token>
-class Parser {
+template<typename Token>
+class wParser {
 private:
-    using pNode = Node<Token>;
-    Tree<Token> tree_;
+    wLexer<Token> lexer_;
 
-    Lexer<Token> lexer_;
-    const size_t& lexer_state_;
+    const wState& lexer_state_;
 
-    bool state_;
 public:
-    Parser() : lexer_state_(lexer_.GetState()), state_(true) {}
+    wParser(const char* file_name) : lexer_(file_name), lexer_state_(lexer_.State()) {}
+    ~wParser() {}
 
-    ~Parser() {}
+#define DeclLexerTarget(NAME)                   \
+    Token Get##NAME() {                         \
+        Token token = lexer_.GetToken();        \
+        if (token.type != wTokenType::w##NAME)  \
+            token.type = wTokenType::wFail;     \
+        token.Print();                          \
+        return token;                           \
+    }
 
-    #define A 10
-    #if A < 12
-    #endif
-    #define TOKEN(TOKEN_NAME, LEVEL)                        \
-        Token Get_##TOKEN_NAME() {                          \
-            Token token = lexer_.GetToken();                \
-            state_ = (token.type == TokenType::TOKEN_NAME); \
-            return token;                                   \
-        }                                                   \
-//#endif
-    #include "LexerToken.def" 
+    DeclLexerTarget(ID);
+    DeclLexerTarget(Letter);
+    DeclLexerTarget(Colon);
+    DeclLexerTarget(Semicolon);
+    DeclLexerTarget(VertLine);
+    DeclLexerTarget(EOF);
+    DeclLexerTarget(Keyword)
 
-    pNode* Get_Code() {
-        size_t save_state = lexer_state_;
-        Token token = lexer_.GetToken();
-        if (token.type == TokenType::Code_) {
-            pNode* node = new pNode;
-            node->data_ = token;
-            return node;
+    wToken GetCode() {
+        // Initial
+        wState state = lexer_.State();
+        wToken tk[1] = {};
+
+        if ((tk[0] = lexer_.GetToken()).type == wTokenType::wCode) {
+            return tk[0];
         } else {
-            lexer_.Rollback(save_state);
-            return nullptr;
+            lexer_.StateRollback(state);
+            tk[0].type = wTokenType::wNone;
+            return tk[0];
         }
-    }      
+    }
 
-    pNode* Get_Depend() {
+    wToken GetDepend() { // TODO:Clear
         // Initial
-        size_t save_state = lexer_state_;
-        state_ = true;
-        pNode* node = new pNode;
-        node->data_.type = TokenType::Depend_;
+        wState state = lexer_.State();
+        wToken tk[3] = {};
 
-        // GetID
-        if (!state_) goto BRANCH_1;
-        tree_.Insert(node, Get_ID());
+        // Branch 1
+        if ((tk[1] = GetID()).type == wTokenType::wID
+         && (tk[2] = GetDepend()).type == wTokenType::wDepend) {
+            tk[0].type = wTokenType::wDepend;
 
-        // GetDepend
-        if (!state_) goto BRANCH_1;
+            tk[0].value.Node = new Node(tk[0]);
+            tk[0].value.Node->Insert(tk[1]);
+            tk[0].value.Node->InsertKid(tk[2].value.Node);
+
+            delete tk[2].value.Node;
+
+            return tk[0];
+        }
+
+        lexer_.StateRollback(state);
+
+        // Branch 2
+        if ((tk[1] = GetLetter()).type == wTokenType::wLetter
+         && (tk[2] = GetDepend()).type == wTokenType::wDepend) {
+            tk[0].type = wTokenType::wDepend;
+
+            tk[0].value.Node = new Node(tk[0]);
+            tk[0].value.Node->Insert(tk[1]);
+            tk[0].value.Node->InsertKid(tk[2].value.Node);
+
+            delete tk[2].value.Node;
+
+            return tk[0];
+        }
+
+        lexer_.StateRollback(state);
+
+        // Branch 3
+        if ((tk[1] = GetID()).type == wTokenType::wID) {
+            tk[0].type = wTokenType::wDepend;
+
+            tk[0].value.Node = new Node(tk[0]);
+            tk[0].value.Node->Insert(tk[1]);
+
+            if ((tk[2] = GetCode()).type == wTokenType::wCode) {
+                tk[0].value.Node->Insert(tk[2].value.Node);
+            }
+
+            return tk[0];
+        }
+
+        lexer_.StateRollback(state);
+
+        // Branch 4
+        if ((tk[1] = GetLetter()).type == wTokenType::wLetter) {
+            tk[0].type = wTokenType::wDepend;
+
+            tk[0].value.Node = new Node(tk[0]);
+            tk[0].value.Node->Insert(tk[1]);
+
+            if ((tk[2] = GetCode()).type == wTokenType::wCode) {
+                tk[0].value.Node->Insert(tk[2].value.Node);
+            }
+
+            return tk[0];
+        }
+
+        // Fail
+        lexer_.StateRollback(state);
+        tk[0].type = wTokenType::wFail;
+        return tk[0];
+    }
+
+    wToken GetDepends() {
+        // Initial
+        wState state = lexer_.State();
+        wToken tk[4] = {};
+
+        // Branch 1
+        if ((tk[1] = GetDepend()).type == wTokenType::wDepend
+         && (tk[2] = GetVertLine()).type == wTokenType::wVertLine
+         && (tk[3] = GetDepends()).type == wTokenType::wDepends) {
+            tk[0].type = wTokenType::wDepends;
+
+            tk[0].value.Node = new Node(tk[0]);
+            tk[0].value.Node->Insert(tk[1].value.Node);
+            tk[0].value.Node->InsertKid(tk[3].value.Node);
+
+            delete tk[3].value.Node;
+
+            return tk[0];
+        }
+
+        // Branch 2
+        lexer_.StateRollback(state);
+
+        if ((tk[1] = GetDepend()).type == wTokenType::wDepend) {
+            tk[0].type = wTokenType::wDepends;
+
+            tk[0].value.Node = new Node(tk[0]);
+            tk[0].value.Node->Insert(tk[1].value.Node);
+
+            return tk[0];
+        }
+
+        // Fail
+        lexer_.StateRollback(state);
+        tk[0].type = wTokenType::wFail;
+        return tk[0];
+    }
+
+    wToken GetRule() {
+        // Initial
+        wState state = lexer_.State();
+        wToken tk[5] = {};
+
+        // Branch 1
+        if ((tk[1] = GetID()).type == wTokenType::wID
+         && (tk[2] = GetColon()).type == wTokenType::wColon
+         && (tk[3] = GetDepends()).type == wTokenType::wDepends
+         && (tk[4] = GetSemicolon()).type == wTokenType::wSemicolon) {
+            tk[0].type = wTokenType::wRule;
+
+            tk[0].value.Node = new Node(tk[0]);
+            tk[0].value.Node->Insert(tk[1]);
+            //tk[0].value.Node->Insert(tk[3].value.Node);
+            tk[0].value.Node->InsertKid(tk[3].value.Node);
+
+            return tk[0];
+        }
+
+        // Fail
+        lexer_.StateRollback(state);
+        tk[0].type = wTokenType::wFail;
+        return tk[0];
+    }
+
+    wToken GetRules() {
+        // Initial
+        wState state = lexer_.State();
+        wToken tk[3] = {};
+
+        // Branch 1
+        if ((tk[1] = GetRule()).type == wTokenType::wRule
+         && (tk[2] = GetRules()).type == wTokenType::wRules) {
+            tk[0].type = wTokenType::wRules;
+
+            tk[0].value.Node = new Node(tk[0]);
+            tk[0].value.Node->Insert(tk[1].value.Node);
+            tk[0].value.Node->InsertKid(tk[2].value.Node);
+
+            delete tk[2].value.Node;
+
+            return tk[0];
+        }
+
+        lexer_.StateRollback(state);
+
+        // Branch 2
+        if ((tk[1] = GetRule()).type == wTokenType::wRule) {
+            tk[0].type = wTokenType::wRules;
+
+            tk[0].value.Node = new Node(tk[0]);
+            tk[0].value.Node->Insert(tk[1].value.Node);
+
+            return tk[0];
+        }
+
+        // Fail
+        lexer_.StateRollback(state);
+        tk[0].type = wTokenType::wFail;
+        return tk[0];
+    }
+
+    wToken GetDeclarations() {
+        // Initial
+        wState state = lexer_.State();
+        wToken tk[3] = {};
+
+        // Branch 1
+        if ((tk[1] = GetKeyword()).type == wTokenType::wKeyword
+         && (tk[2] = GetCode()).type == wTokenType::wCode) {
+            tk[0].type = wTokenType::wUnion;
+
+            tk[0].value.Node = new Node(tk[0]);
+            tk[0].value.Node->Insert(tk[2].value.Node);
+
+            return tk[0];    
+        }
+
+        // Fail
+        lexer_.StateRollback(state);
+        tk[0].type = wTokenType::wFail;
+        return tk[0];
+    }
+
+    wToken GetG() {
+        // Initial
+        wState state = lexer_.State();
+        wToken tk[4] = {};
+
+        // Branch 1
+        if ((tk[1] = GetDeclarations()).type == wTokenType::wUnion
+         && (tk[2] = GetRules()).type == wTokenType::wRules
+         && (tk[3] = GetEOF()).type == wTokenType::wEOF) {
+            tk[0].type = wTokenType::wProgram;
+
+            tk[0].value.Node = new Node(tk[0]);
+            tk[0].value.Node->Insert(tk[1].value.Node);
+            tk[0].value.Node->Insert(tk[2].value.Node);
+
+            tk[0].value.Node->GraphicsDump();
+
+            return tk[0];
         
-        {
-            pNode* depend_node = Get_Depend();
-            if (state_) {
-                for (size_t i = 0; i < depend_node->childs_.Size(); ++i) {
-                    tree_.Insert(node, depend_node->childs_[i], false);
-                }
-            }
-            delete depend_node;
         }
 
-        // GetCode
-        if (!state_) goto BRANCH_1;
-        tree_.Insert(node, Get_Code());
+        lexer_.StateRollback(state);
 
-        // Branch
-        if (state_) return node;
-        BRANCH_1:
-        tree_.ClearSubTree(node);
-        lexer_.Rollback(save_state);
-        state_ = true;
+        // Branch 2
+        if ((tk[1] = GetRules()).type == wTokenType::wRules
+         && (tk[2] = GetEOF()).type == wTokenType::wEOF) {
+            tk[0].type = wTokenType::wProgram;
 
-        // GetLetter
-        if (!state_) goto BRANCH_2;
-        tree_.Insert(node, Get_Letter());
+            tk[0].value.Node = new Node(tk[0]);
+            tk[0].value.Node->Insert(tk[1].value.Node);
 
-        // GetDepend
-        if (!state_) goto BRANCH_2;
-        
-        {
-            pNode* depend_node = Get_Depend();
-            if (state_) {
-                for (size_t i = 0; i < depend_node->childs_.Size(); ++i) {
-                    tree_.Insert(node, depend_node->childs_[i], false);
-                }
-            }
-            delete depend_node;
+            std::cerr << "OK\n";
+            tk[0].value.Node->GraphicsDump();
+
+            return tk[0];
         }
 
-        // GetCode
-        if (!state_) goto BRANCH_2;
-        tree_.Insert(node, Get_Code());
-
-        // Branch
-        if (state_) return node;
-        BRANCH_2:
-        tree_.ClearSubTree(node);
-        lexer_.Rollback(save_state);
-        state_ = true;
-
-        // GetID
-        if (!state_) goto BRANCH_3;
-        tree_.Insert(node, Get_ID());
-
-        // GetCode
-        if (!state_) goto BRANCH_3;
-        tree_.Insert(node, Get_Code());
-
-        // Branch
-        if (state_) return node;
-        BRANCH_3:
-        tree_.ClearSubTree(node);
-        lexer_.Rollback(save_state);
-        state_ = true;
-
-        // GetLetter
-        if (!state_) return node;
-        tree_.Insert(node, Get_Letter());
-
-        // GetCode
-        if (!state_) goto BRANCH_4;
-        tree_.Insert(node, Get_Code());
-
-        // Terminate        
-        if (state_) return node;
-        BRANCH_4:
-        tree_.ClearSubTree(node);
-        delete node;
-        return nullptr;
+        // Fail
+        std::cout << "Fail\n";
+        lexer_.StateRollback(state);
+        tk[0].type = wTokenType::wFail;
+        return tk[0];
     }
 
-    pNode* Get_Depends() {
-        // Initial
-        size_t save_state = lexer_state_;
-        state_ = true;
-        pNode* node = new pNode;
-        node->data_.type = TokenType::Depends_;
-
-        // GetDepend
-        if (!state_) goto BRANCH_1;
-        tree_.Insert(node, Get_Depend());
-
-        // Require('|')
-        if (!state_) goto BRANCH_1;
-        Get_VertLine();
-
-        // GetDepends
-        if (!state_) goto BRANCH_1;
-
-        {
-            pNode* depends_node = Get_Depends();
-            if (state_) {
-                for (size_t i = 0; i < depends_node->childs_.Size(); ++i) {
-                    tree_.Insert(node, depends_node->childs_[i], false);
-                }
-            }
-            delete depends_node;
-        }
-
-        // Branch
-        if (state_) return node;
-        BRANCH_1:
-        tree_.ClearSubTree(node);
-        lexer_.Rollback(save_state);
-        state_ = true;
-
-        // GetDepend
-        if (!state_) goto BRANCH_2;
-        tree_.Insert(node, Get_Depend());
-        
-        // Terminate
-        if (state_) return node;
-        BRANCH_2:
-        tree_.ClearSubTree(node);
-        delete node;
-        return nullptr;
-    }
-
-    pNode* Get_Rule() {
-        // Initial
-        size_t save_state = lexer_state_;
-        state_ = true;
-        pNode* node = new pNode;
-        node->data_.type = TokenType::Rule_;
-
-        // GetID
-        if (!state_) goto BRANCH_1;
-        tree_.Insert(node, Get_ID());
-
-        // Require(':')
-        if (!state_) goto BRANCH_1;
-        Get_Colon();
-
-        // GetDepends
-        if (!state_) goto BRANCH_1;
-        tree_.Insert(node, Get_Depends());
-
-        // GetSemicolon
-        if (!state_) goto BRANCH_1;
-        Get_Semicolon();
-
-        // Terminate
-        if (state_) return node;
-        BRANCH_1:
-        tree_.ClearSubTree(node);
-        delete node;
-        return nullptr;
-    }
-
-    pNode* Get_Rules() {
-        // Initial
-        size_t save_state = lexer_state_;
-        state_ = true;
-        pNode* node = new pNode;
-        node->data_.type = TokenType::Rules_;
-
-        // GetRule
-        if (!state_) goto BRANCH_1;
-        tree_.Insert(node, Get_Rule());
-
-        // GetRules
-        if (!state_) goto BRANCH_1;
-
-        {
-            pNode* rules_node = Get_Rules();
-            if (state_) {
-                for (size_t i = 0; i < rules_node->childs_.Size(); ++i) {
-                    tree_.Insert(node, rules_node->childs_[i], false);
-                }
-            }
-            delete rules_node;
-        }
-
-        // Branch
-        if (state_) return node;
-        BRANCH_1:
-        tree_.ClearSubTree(node);
-        lexer_.Rollback(save_state);
-        state_ = true;
-
-        // GetRule
-        if (!state_) goto BRANCH_2;
-        tree_.Insert(node, Get_Rule());
-
-        // Terminate
-        if (state_) return node;
-        BRANCH_2:
-        tree_.ClearSubTree(node);
-        delete node;
-        return nullptr;
-    }
-
-    RetT Get_G() {
-        // Initial
-        size_t save_state = lexer_state_;
-        state_ = true;
-        pNode* node = new pNode;
-        node->data_.type = TokenType::Program;
-
-        if (!state_) goto BRANCH_1;
-        tree_.Insert(node, Get_Rules());
-
-        if (state_) { 
-            tree_.Insert(nullptr, node);
-            std::cout << tree_.Size() << "\n";
-            tree_.GraphicsDump();
-
-            Generator gen(tree_);
-            gen.Generate();
-        }
-        BRANCH_1:
-        tree_.ClearSubTree(node);
-        delete node;
-        //Get_EndOfFile();
-        return state_;
-    }
-
-    RetT ParseFile(const char* file_name) {
-        if (!lexer_.OpenFile(file_name)) {
-            abort(); // TODO:
-        }
-        return Get_G();
+    wToken StartParce() {
+        //for (wToken tk = lexer_.GetToken(); tk.type != wTokenType::wEOF; tk = lexer_.GetToken()) {
+        //    tk.Print();
+        //}
+        wToken tk = GetG();
+        Generator gen(tk.value.Node);
+        gen.Generate();
+        return tk;
+        //if (tk.type != wTokenType::wFail) GetG().value.Node->Print();
+        return tk;
     }
 };
 

@@ -1,0 +1,34 @@
+%union {
+    char* a;
+    char* b;
+    Node* a;
+}
+
+<IndentRule> : <D> <D> {
+    for () {
+        for () {
+            for {
+                {
+                    adawawdawd
+                }
+            }
+        }
+    }
+}
+;
+
+<NoIndentRule> : <R> <R> {
+  for () {
+  for () {
+  for () {
+  for ()
+  {
+    {
+      
+    }
+  }
+  }
+  }
+  }
+}
+;

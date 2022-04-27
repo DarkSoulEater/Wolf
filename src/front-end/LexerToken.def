@@ -1,9 +1,0 @@
-TOKEN(ID, 0)
-TOKEN(Letter, 1)
-TOKEN(VertLine, 2)
-TOKEN(Colon, 3)
-TOKEN(Semicolon, 4)
-TOKEN(Error, 5)
-TOKEN(EndOfFile, 6)
-
-#undef TOKEN

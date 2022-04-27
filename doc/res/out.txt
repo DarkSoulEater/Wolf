@@ -1,9 +1,302 @@
-void Get_dawd() {
+/* This code is generated automatically
+*
+*/
+
+#include "WolfCore.hpp"
+
+// Wolf types
+enum wTokenType {
+
 }
 
-void Get_awd() {
+union wTokenUnion {
+
 }
 
-void Get_exp() {
+// Wolf Rules
+wToken Getdawd() {
+    // Initial
+    wState state = wlexer.State()
+    wToken tk[3] = {};
+
+    // Branch 1
+    if ((tk[1] = Getawdawd()).type == wTokenType::awdawd) {
+        tk[0].type = wTokenType::dawd;
+
+        return tk[0];
+    }
+    wlexer.StateRollback(state);
+
+    // Branch 2
+    if ((tk[1] = GetawdaW()).type == wTokenType::awdaW
+     && (tk[2] = Getdaw()).type == wTokenType::daw) {
+        tk[0].type = wTokenType::dawd;
+
+        return tk[0];
+    }
+    wlexer.StateRollback(state);
+
+    // Branch 3
+    if ((tk[1] = Getdaw()).type == wTokenType::daw
+     && (tk[2] = Getdawdaw()).type == wTokenType::dawdaw) {
+        tk[0].type = wTokenType::dawd;
+
+        return tk[0];
+    }
+    wlexer.StateRollback(state);
+
+    // Branch 4
+    if ((tk[1] = Getdawd()).type == wTokenType::dawd) {
+        tk[0].type = wTokenType::dawd;
+
+        return tk[0];
+    }
+    wlexer.StateRollback(state);
+
+    // Fail final
+    tk[0].type = wTokenType::wFail
+    return tk[0];
 }
 
+wToken Getawd() {
+    // Initial
+    wState state = wlexer.State()
+    wToken tk[2] = {};
+
+    // Branch 1
+    if ((tk[1] = GetDaw()).type == wTokenType::Daw) {
+        tk[0].type = wTokenType::awd;
+
+        return tk[0];
+    }
+    wlexer.StateRollback(state);
+
+    // Fail final
+    tk[0].type = wTokenType::wFail
+    return tk[0];
+}
+
+wToken Getexp() {
+    // Initial
+    wState state = wlexer.State()
+    wToken tk[5] = {};
+
+    // Branch 1
+    if ((tk[1] = Getexp()).type == wTokenType::exp
+     && (tk[2] = GetSym[+]()).type == wTokenType::Sym[+]
+     && (tk[3] = Getexp()).type == wTokenType::exp) {
+        tk[0].type = wTokenType::exp;
+
+        { // ---------- User Code ----------
+
+        Kek();
+        Print("Hello world\n");
+
+        } // ---------- End  Code ----------
+
+        return tk[0];
+    }
+    wlexer.StateRollback(state);
+
+    // Branch 2
+    if ((tk[1] = Getexp()).type == wTokenType::exp
+     && (tk[2] = GetSym[-]()).type == wTokenType::Sym[-]
+     && (tk[3] = Getexp()).type == wTokenType::exp) {
+        tk[0].type = wTokenType::exp;
+
+        return tk[0];
+    }
+    wlexer.StateRollback(state);
+
+    // Branch 3
+    if ((tk[1] = Getexp()).type == wTokenType::exp
+     && (tk[2] = GetSym[*]()).type == wTokenType::Sym[*]
+     && (tk[3] = Getexp()).type == wTokenType::exp) {
+        tk[0].type = wTokenType::exp;
+
+        { // ---------- User Code ----------
+
+        awdawd awd awd awd awd awd awdaw;
+        Print("World hello");
+        KUK();
+
+        } // ---------- End  Code ----------
+
+        return tk[0];
+    }
+    wlexer.StateRollback(state);
+
+    // Branch 4
+    if ((tk[1] = Getexp()).type == wTokenType::exp
+     && (tk[2] = GetSym[(]()).type == wTokenType::Sym[(]
+     && (tk[3] = Getexp()).type == wTokenType::exp
+     && (tk[4] = GetSym[)]()).type == wTokenType::Sym[)]) {
+        tk[0].type = wTokenType::exp;
+
+        return tk[0];
+    }
+    wlexer.StateRollback(state);
+
+    // Fail final
+    tk[0].type = wTokenType::wFail
+    return tk[0];
+}
+
+wToken Getcycle() {
+    // Initial
+    wState state = wlexer.State()
+    wToken tk[2] = {};
+
+    // Branch 1
+    if ((tk[1] = GetOK()).type == wTokenType::OK) {
+        tk[0].type = wTokenType::cycle;
+
+        { // ---------- User Code ----------
+
+        for (size_t i = 0; i < n; ++i) {
+            std::cout << "Hello";
+        }
+
+        } // ---------- End  Code ----------
+
+        return tk[0];
+    }
+    wlexer.StateRollback(state);
+
+    // Fail final
+    tk[0].type = wTokenType::wFail
+    return tk[0];
+}
+
+wToken GetMoreDepend() {
+    // Initial
+    wState state = wlexer.State()
+    wToken tk[8] = {};
+
+    // Branch 1
+    if ((tk[1] = GetB()).type == wTokenType::B) {
+        tk[0].type = wTokenType::MoreDepend;
+
+        return tk[0];
+    }
+    wlexer.StateRollback(state);
+
+    // Branch 2
+    if ((tk[1] = Getf()).type == wTokenType::f
+     && (tk[2] = GetF()).type == wTokenType::F
+     && (tk[3] = Getf()).type == wTokenType::f) {
+        tk[0].type = wTokenType::MoreDepend;
+
+        { // ---------- User Code ----------
+
+        d
+
+        } // ---------- End  Code ----------
+
+        return tk[0];
+    }
+    wlexer.StateRollback(state);
+
+    // Branch 3
+    if ((tk[1] = GetA()).type == wTokenType::A
+     && (tk[2] = GetB()).type == wTokenType::B
+     && (tk[3] = GetC()).type == wTokenType::C
+     && (tk[4] = GetD()).type == wTokenType::D
+     && (tk[5] = GetE()).type == wTokenType::E
+     && (tk[6] = GetG()).type == wTokenType::G
+     && (tk[7] = GetW()).type == wTokenType::W) {
+        tk[0].type = wTokenType::MoreDepend;
+
+        { // ---------- User Code ----------
+
+        d
+
+        } // ---------- End  Code ----------
+
+        return tk[0];
+    }
+    wlexer.StateRollback(state);
+
+    // Fail final
+    tk[0].type = wTokenType::wFail
+    return tk[0];
+}
+
+wToken GetMoreBranch() {
+    // Initial
+    wState state = wlexer.State()
+    wToken tk[2] = {};
+
+    // Branch 1
+    if ((tk[1] = GetA()).type == wTokenType::A) {
+        tk[0].type = wTokenType::MoreBranch;
+
+        return tk[0];
+    }
+    wlexer.StateRollback(state);
+
+    // Branch 2
+    if ((tk[1] = GetB()).type == wTokenType::B) {
+        tk[0].type = wTokenType::MoreBranch;
+
+        return tk[0];
+    }
+    wlexer.StateRollback(state);
+
+    // Branch 3
+    if ((tk[1] = GetC()).type == wTokenType::C) {
+        tk[0].type = wTokenType::MoreBranch;
+
+        return tk[0];
+    }
+    wlexer.StateRollback(state);
+
+    // Branch 4
+    if ((tk[1] = GetD()).type == wTokenType::D) {
+        tk[0].type = wTokenType::MoreBranch;
+
+        return tk[0];
+    }
+    wlexer.StateRollback(state);
+
+    // Branch 5
+    if ((tk[1] = GetG()).type == wTokenType::G) {
+        tk[0].type = wTokenType::MoreBranch;
+
+        return tk[0];
+    }
+    wlexer.StateRollback(state);
+
+    // Branch 6
+    if ((tk[1] = GetW()).type == wTokenType::W) {
+        tk[0].type = wTokenType::MoreBranch;
+
+        return tk[0];
+    }
+    wlexer.StateRollback(state);
+
+    // Branch 7
+    if ((tk[1] = GetE()).type == wTokenType::E) {
+        tk[0].type = wTokenType::MoreBranch;
+
+        return tk[0];
+    }
+    wlexer.StateRollback(state);
+
+    // Branch 8
+    if ((tk[1] = GetV()).type == wTokenType::V) {
+        tk[0].type = wTokenType::MoreBranch;
+
+        return tk[0];
+    }
+    wlexer.StateRollback(state);
+
+    // Fail final
+    tk[0].type = wTokenType::wFail
+    return tk[0];
+}
+
+// The main wolf parser function
+wToken StartParse() {
+
+}

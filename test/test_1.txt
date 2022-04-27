@@ -1,0 +1,24 @@
+%union {
+    char* a;
+    char* b;
+    Node* a;
+}
+
+<dawd> : <awdawd>  | <awdaW> <daw> | <daw> <dawdaw> | <dawd>
+;
+
+<awd> : <Daw>
+;
+
+<exp> : <exp> '+' <exp> { Kek();
+      Print("Hello world\n");
+}   
+    | <exp> '-' <exp> 
+    | <exp> '*' <exp> {
+    Print("World hello");
+    KUK();}
+    | <exp> '(' <exp> ')'
+;
+
+<Main> : <KEK>
+;

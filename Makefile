@@ -16,12 +16,13 @@ BIN_DIR = bin
 
 # Settings
 #SFML = INC
-#SSE = INC
+SSE = INC
 
 # Set include path
 CXXFLAGS += -I$(CURDIR)\src
 CXXFLAGS += -I$(CURDIR)\src\tools
 CXXFLAGS += -I$(CURDIR)\src\front-end
+CXXFLAGS += -I$(CURDIR)\src\back-end
 
 # Setting build parameters
 ifeq ($(BUILD), Debug)

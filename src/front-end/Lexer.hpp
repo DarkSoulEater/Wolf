@@ -2,108 +2,161 @@
 #define WOLF_LEXER_HPP
 
 #include <cctype>
+#include "Tree.hpp"
 #include "Buffer.hpp"
 #include "Vector.hpp"
 #include "Token.hpp"
 
+typedef size_t wState;
+
 template <typename Token>
-class Lexer {
+class wLexer {
 private:
     Buffer buffer_;
-    Vector<Token> tokens_;
+    Vector<wToken> tokens_;
 
-    size_t state_;
+    wState active_token_;
+
     size_t line_;
     size_t column_;
 
     char* data_;
 public:
-    Lexer() : state_(0), line_(1), column_(0), data_(nullptr) {}
-    ~Lexer() {}
-
-    bool OpenFile(const char* file_name) {
-        bool f = buffer_.OpenFile(file_name);
+    wLexer(const char* file_name) : buffer_(file_name), active_token_(0), line_(1), column_(0) {
         data_ = (char*) buffer_.GetData();
-        return f;
+    }
+
+    ~wLexer() {}
+
+    inline wState State() const { return active_token_; }
+
+    void StateRollback(wState state) {
+        active_token_ = state;
     }
 
     #define ReturnToken(TYPE)           \
-        token.type = TokenType::TYPE;   \
+        token.type = wTokenType::TYPE;  \
         tokens_.PushBack(token);        \
-        return tokens_[state_++];     
+        return tokens_[active_token_++];     
 
     Token GetToken() {
-        if (state_ < tokens_.Size()) return tokens_[state_++];
+        if (active_token_ < tokens_.Size()) return tokens_[active_token_++];
 
         char c = 0;
         while (std::isspace(c = Getc())) 
             ;
 
-        Token token(line_, column_, TokenType::EndOfFile);
+        wToken token(line_, column_, wTokenType::wEOF);
 
         switch (c) {
         case '<':
-            token.ID = data_;
+            token.value.ID = data_;
             while (std::isalpha(c = Getc()))
                 ;
             
             if (c == '>') {
                 *(data_ - 1) = '\0';
-                ReturnToken(ID);
+                ReturnToken(wID);
             }
         
-            ReturnToken(Error);
+            ReturnToken(wLexerError);
             break;
 
         case '\'':
             c = Getc();
-            token.Letter = c;
+            token.value.Letter = c;
             c = Getc();
             if (c == '\'') {
-                ReturnToken(Letter);
+                ReturnToken(wLetter);
             }
-            ReturnToken(Error);
+            ReturnToken(wLexerError);
             break;
 
-        case '{':
-            token.Code = data_;
-            while ((c = Getc()) != '}' && c != '\0')
-                ;
-            if (c == '}') {
-                *(data_ - 1) = '\0';
-                ReturnToken(Code_);
+        case '{': {
+            int cnt_opened = 1;
+            token.type = wTokenType::wCode;
+            token.value.Node = new wNode(token);
+
+            while (cnt_opened != 0) {
+                c = Getc();
+                
+                // If EOF
+                if (c == '\0') {
+                    delete token.value.Node;
+                    ReturnToken(wLexerError);
+                }
+
+                // Skip space
+                if (isspace(c)) continue;
+                
+                // Check code end
+                if (c == '}') {
+                    if (cnt_opened == 1) {
+                        *(data_ - 1) = '\0';    
+                        break;
+                    }
+                }
+
+                // Add new line
+                wNode* line_node = new wNode(wToken(line_, column_, wTokenType::wLine));
+                line_node->data_.value.str = data_ - 1;
+
+                wNode* indent = new wNode(wToken(line_, column_, wTokenType::wIndent));
+                indent->data_.value.Indent = cnt_opened - (c == '}' ? 1 : 0);
+                line_node->Insert(indent);
+
+                token.value.Node->Insert(line_node);
+
+                while (c != '\n' && c != '\0') {
+                    if (c == '}') --cnt_opened;
+                    else if (c == '{') ++cnt_opened;
+
+                    if (cnt_opened == 0) {
+                        *(data_ - 1) = '\0';
+                        goto Break;
+                    }
+
+                    c = Getc();
+                }
+                *(data_ - 1) = *(data_ - 2) = '\0';
             }
-            ReturnToken(Error);
-            break;
+            Break:{}
+            
+            ReturnToken(wCode);
+        } break;
+
+        case '%': {
+            char* ptr = data_;  
+            while (isalpha(*data_))
+                c = Getc();
+            
+            ReturnToken(wKeyword);
+            
+            ReturnToken(wLexerError);
+        } break;
 
         case ':':
-            ReturnToken(Colon);
+            ReturnToken(wColon);
             break;
 
         case '|':
-            ReturnToken(VertLine);
+            ReturnToken(wVertLine);
             break;
 
         case ';':
-            ReturnToken(Semicolon);
+            ReturnToken(wSemicolon);
             break;
 
         case '\0':
-            ReturnToken(EndOfFile);
+            ReturnToken(wEOF);
             break;
         
         default:
-            ReturnToken(Error);
+            ReturnToken(wLexerError);
             break;
         }
     }
     #undef ReturnToken
-
-    inline const size_t& GetState() const { return state_; }
-
-    void Rollback(size_t state) {
-        state_ = state;
-    }
 
 private:
     char Getc() {

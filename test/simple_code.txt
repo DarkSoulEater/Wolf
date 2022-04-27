@@ -1,0 +1,10 @@
+%union {
+    char* a;
+    char* b;
+    Node* a;
+}
+
+<KeK> : <LoL> {
+  Print();
+}
+;

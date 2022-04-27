@@ -15,9 +15,10 @@
       Print("Hello world\n");
   }   
     | <exp> '-' <exp> 
-    | <exp> '*' <exp> { awdawd awd awd awd awd awd awdaw;
+    | <exp> '*' <exp> {
     Print("World hello");
-    KUK();}
+    KUK();
+    }
     | <exp> '(' <exp> ')'
 ;
 
@@ -26,19 +27,4 @@
     std::cout << "Hello";
   }
 }
-;
-
-<MoreDepend> : <B> | <f> <F> <f> {d} | <A> <B> <C> <D> <E> <G> <W> {d
-
-}
-;
-
-<MoreBranch> : <A>
-    | <B>
-    | <C>
-    | <D>
-    | <G>
-    | <W>
-    | <E>
-    | <V>
 ;
