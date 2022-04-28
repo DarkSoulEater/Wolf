@@ -21,6 +21,7 @@ static const char* StartParseComment = "// The main wolf parser function\n";
 
 static const char* StartParse = "wToken StartParse() {";
 
+/*
 class Generator {
 private:
     wNode* root_;
@@ -134,6 +135,6 @@ private:
         fprintf(file, "    }\n");
         ///fprintf(file, "    if () {\n\n    }\n\n");
     }
-};
+};*/
 
 #endif // WOLF_GENERATOR_HPP

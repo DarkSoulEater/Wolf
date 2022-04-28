@@ -1,0 +1,41 @@
+// DeclToken(NAME, VAL)
+DeclToken(None       , 0)
+DeclToken(LexerError , 1)
+DeclToken(Fail       , 2)
+DeclToken(EOF        , 3)
+DeclToken(Keyword    , 4)
+
+DeclToken(ID         , 10)
+DeclToken(Letter     , 11)
+DeclToken(Code       , 12)
+DeclToken(Line       , 13)
+DeclToken(Indent     , 14)
+DeclToken(Percent    , 37)  // '%%'
+DeclToken(Asterisk   , 42)  // '*'
+DeclToken(Plus       , 43)  // '+'
+DeclToken(Comma      , 44)  // ','
+DeclToken(Colon      , 58)  // ':'
+DeclToken(Semicolon  , 59)  // ';'
+DeclToken(Question   , 63)  // '?'
+DeclToken(SqBracketL , 91)  // '['
+DeclToken(SqBracketR , 93)  // ']'
+DeclToken(VertLine   , 124) // '|'
+DeclToken(Tilde      , 126) // '~'
+
+DeclToken(G            , 200)
+DeclToken(Preamble     , 201)
+DeclToken(Declarations , 202)
+DeclToken(Union        , 203)
+DeclToken(DeclToken    , 204)
+DeclToken(Rule         , 205)
+DeclToken(Depend       , 206)
+
+DeclToken(Block1N      , 300) // [ ]+
+DeclToken(Block0N      , 301) // [ ]*
+DeclToken(Block01      , 302) // [ ]~
+DeclToken(BlockQ       , 303) // [ ]?
+DeclToken(BlockQ1N     , 304) // [ ]?+
+DeclToken(BlockQ0N     , 305) // [ ]?*
+DeclToken(BlockQ01     , 306) // [ ]?~
+
+#undef DeclToken

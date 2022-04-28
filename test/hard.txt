@@ -1,0 +1,16 @@
+// Lexer
+<Comment> : '/' '*' <any> '*' '/' | '/' '/' <any> '\n' // TODO
+<Letter> : 'a' - 'z' | 'A' - 'Z'
+<Digit> : '0' - '9'
+<Word> : <Letter> [<Digit>, <Letter>, '_']?*
+<Code> : '{' /*Code*/ '}' // TODO
+<ID> : "<" <Word> ">" "*" | "<" <Word> ">" "+" | "<" <Word> ">"
+
+// Parser 
+<G> : <Preamble> <Declarations> [<Rule>]+
+<Preamble> : // TODO
+<Declarations> : [<Union>]~ [<DeclToken>]* // TODO
+<Union> : '#' <Keyword> <Code> // TODO
+<DeclToken> : '#' <Keyword> <Type> // TODO
+<Rule> : <ID> ':' [<Depend>]+ [<Code>]~ ['|' [<Depend>]+ [<Code>]~]*
+<Depend> : '[' <Depend> ']'   ['+', '*', '~', '?' ['*', '+', <none>], <none>]  |  <Depend> [',' <Depend>]* | [<ID>, <Letter>]?+

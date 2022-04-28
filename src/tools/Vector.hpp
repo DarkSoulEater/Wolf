@@ -36,6 +36,10 @@ public:
         data_[size_++] = value;
     }
 
+    void PopBack() {
+        if (size_) --size_;
+    }
+
     T& operator[](size_t i) { return data_[i]; }
     const T& operator[](size_t i) const { return data_[i]; }
 

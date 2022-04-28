@@ -2,10 +2,13 @@
 #define WOLF_PARSER_HPP
 
 #include <iostream>
+#include "Logger.hpp"
 #include "Lexer.hpp"
 #include "Parser.hpp"
 #include "Tree.hpp"
 #include "Generator.hpp"
+
+#pragma GCC diagnostic ignored "-Wswitch-enum"
 
 template<typename Token>
 class wParser {
@@ -18,13 +21,14 @@ public:
     wParser(const char* file_name) : lexer_(file_name), lexer_state_(lexer_.State()) {}
     ~wParser() {}
 
-#define DeclLexerTarget(NAME)                   \
-    Token Get##NAME() {                         \
-        Token token = lexer_.GetToken();        \
-        if (token.type != wTokenType::w##NAME)  \
-            token.type = wTokenType::wFail;     \
-        token.Print();                          \
-        return token;                           \
+#define DeclLexerTarget(NAME)                       \
+    wToken Get##NAME() {                            \
+        wToken ret(0, 0, wTokenType::w##NAME);      \
+        wToken token = lexer_.GetToken();           \
+                                                    \
+        if (token.type != wTokenType::w##NAME){     \
+            Error(ret, token, "");                 }\
+        return token;                               \
     }
 
     DeclLexerTarget(ID);
@@ -34,259 +38,239 @@ public:
     DeclLexerTarget(VertLine);
     DeclLexerTarget(EOF);
     DeclLexerTarget(Keyword)
+    DeclLexerTarget(Code)
+    DeclLexerTarget(Percent)
+    DeclLexerTarget(Asterisk)
+    DeclLexerTarget(Plus)
+    DeclLexerTarget(Comma)
+    DeclLexerTarget(Question)
+    DeclLexerTarget(SqBracketL)
+    DeclLexerTarget(SqBracketR)
+    DeclLexerTarget(Tilde)
 
-    wToken GetCode() {
-        // Initial
-        wState state = lexer_.State();
-        wToken tk[1] = {};
+    #define InitRule(RULE_NAME)                         \
+        wToken ret_val(0, 0, wTokenType::w##RULE_NAME); \
+        ret_val.value.Node = new Node(ret_val);         \
+        wToken token = lexer_.ViewToken();
 
-        if ((tk[0] = lexer_.GetToken()).type == wTokenType::wCode) {
-            return tk[0];
-        } else {
-            lexer_.StateRollback(state);
-            tk[0].type = wTokenType::wNone;
-            return tk[0];
-        }
-    }
+    #define Success() return ret_val; 
 
-    wToken GetDepend() { // TODO:Clear
-        // Initial
-        wState state = lexer_.State();
-        wToken tk[3] = {};
+    #define Get(TYPE) ((token = Get##TYPE()).type == wTokenType::w##TYPE)
+    #define View(TYPE) ((token = lexer_.ViewToken()).type == wTokenType::w##TYPE)
+    #define error(TEXT) Error(ret_val, token, TEXT)
 
-        // Branch 1
-        if ((tk[1] = GetID()).type == wTokenType::wID
-         && (tk[2] = GetDepend()).type == wTokenType::wDepend) {
-            tk[0].type = wTokenType::wDepend;
+    #define SaveLocation() ;
 
-            tk[0].value.Node = new Node(tk[0]);
-            tk[0].value.Node->Insert(tk[1]);
-            tk[0].value.Node->InsertKid(tk[2].value.Node);
+    #define ValNode ret_val.value.Node
+    #define RetVal ret_val.value
+    #define TokenVal token.value
+    #define TokenNode token.value.Node
 
-            delete tk[2].value.Node;
+    #define InsertToken() ret_val.value.Node->Insert(token)
+    #define InsertNode() ret_val.value.Node->Insert(token.value.Node)
+    #define InsertKids() ret_val.value.Node->InsertKid(token.value.Node)
 
-            return tk[0];
-        }
+    /*wToken Get() {
+        wToken ret(0, 0, wTokenType::);
+        wToken token = lexer_.ViewToken();
 
-        lexer_.StateRollback(state);
-
-        // Branch 2
-        if ((tk[1] = GetLetter()).type == wTokenType::wLetter
-         && (tk[2] = GetDepend()).type == wTokenType::wDepend) {
-            tk[0].type = wTokenType::wDepend;
-
-            tk[0].value.Node = new Node(tk[0]);
-            tk[0].value.Node->Insert(tk[1]);
-            tk[0].value.Node->InsertKid(tk[2].value.Node);
-
-            delete tk[2].value.Node;
-
-            return tk[0];
-        }
-
-        lexer_.StateRollback(state);
-
-        // Branch 3
-        if ((tk[1] = GetID()).type == wTokenType::wID) {
-            tk[0].type = wTokenType::wDepend;
-
-            tk[0].value.Node = new Node(tk[0]);
-            tk[0].value.Node->Insert(tk[1]);
-
-            if ((tk[2] = GetCode()).type == wTokenType::wCode) {
-                tk[0].value.Node->Insert(tk[2].value.Node);
-            }
-
-            return tk[0];
-        }
-
-        lexer_.StateRollback(state);
-
-        // Branch 4
-        if ((tk[1] = GetLetter()).type == wTokenType::wLetter) {
-            tk[0].type = wTokenType::wDepend;
-
-            tk[0].value.Node = new Node(tk[0]);
-            tk[0].value.Node->Insert(tk[1]);
-
-            if ((tk[2] = GetCode()).type == wTokenType::wCode) {
-                tk[0].value.Node->Insert(tk[2].value.Node);
-            }
-
-            return tk[0];
-        }
-
-        // Fail
-        lexer_.StateRollback(state);
-        tk[0].type = wTokenType::wFail;
-        return tk[0];
-    }
-
-    wToken GetDepends() {
-        // Initial
-        wState state = lexer_.State();
-        wToken tk[4] = {};
-
-        // Branch 1
-        if ((tk[1] = GetDepend()).type == wTokenType::wDepend
-         && (tk[2] = GetVertLine()).type == wTokenType::wVertLine
-         && (tk[3] = GetDepends()).type == wTokenType::wDepends) {
-            tk[0].type = wTokenType::wDepends;
-
-            tk[0].value.Node = new Node(tk[0]);
-            tk[0].value.Node->Insert(tk[1].value.Node);
-            tk[0].value.Node->InsertKid(tk[3].value.Node);
-
-            delete tk[3].value.Node;
-
-            return tk[0];
-        }
-
-        // Branch 2
-        lexer_.StateRollback(state);
-
-        if ((tk[1] = GetDepend()).type == wTokenType::wDepend) {
-            tk[0].type = wTokenType::wDepends;
-
-            tk[0].value.Node = new Node(tk[0]);
-            tk[0].value.Node->Insert(tk[1].value.Node);
-
-            return tk[0];
-        }
-
-        // Fail
-        lexer_.StateRollback(state);
-        tk[0].type = wTokenType::wFail;
-        return tk[0];
-    }
-
-    wToken GetRule() {
-        // Initial
-        wState state = lexer_.State();
-        wToken tk[5] = {};
-
-        // Branch 1
-        if ((tk[1] = GetID()).type == wTokenType::wID
-         && (tk[2] = GetColon()).type == wTokenType::wColon
-         && (tk[3] = GetDepends()).type == wTokenType::wDepends
-         && (tk[4] = GetSemicolon()).type == wTokenType::wSemicolon) {
-            tk[0].type = wTokenType::wRule;
-
-            tk[0].value.Node = new Node(tk[0]);
-            tk[0].value.Node->Insert(tk[1]);
-            //tk[0].value.Node->Insert(tk[3].value.Node);
-            tk[0].value.Node->InsertKid(tk[3].value.Node);
-
-            return tk[0];
-        }
-
-        // Fail
-        lexer_.StateRollback(state);
-        tk[0].type = wTokenType::wFail;
-        return tk[0];
-    }
-
-    wToken GetRules() {
-        // Initial
-        wState state = lexer_.State();
-        wToken tk[3] = {};
-
-        // Branch 1
-        if ((tk[1] = GetRule()).type == wTokenType::wRule
-         && (tk[2] = GetRules()).type == wTokenType::wRules) {
-            tk[0].type = wTokenType::wRules;
-
-            tk[0].value.Node = new Node(tk[0]);
-            tk[0].value.Node->Insert(tk[1].value.Node);
-            tk[0].value.Node->InsertKid(tk[2].value.Node);
-
-            delete tk[2].value.Node;
-
-            return tk[0];
-        }
-
-        lexer_.StateRollback(state);
-
-        // Branch 2
-        if ((tk[1] = GetRule()).type == wTokenType::wRule) {
-            tk[0].type = wTokenType::wRules;
-
-            tk[0].value.Node = new Node(tk[0]);
-            tk[0].value.Node->Insert(tk[1].value.Node);
-
-            return tk[0];
-        }
-
-        // Fail
-        lexer_.StateRollback(state);
-        tk[0].type = wTokenType::wFail;
-        return tk[0];
-    }
-
-    wToken GetDeclarations() {
-        // Initial
-        wState state = lexer_.State();
-        wToken tk[3] = {};
-
-        // Branch 1
-        if ((tk[1] = GetKeyword()).type == wTokenType::wKeyword
-         && (tk[2] = GetCode()).type == wTokenType::wCode) {
-            tk[0].type = wTokenType::wUnion;
-
-            tk[0].value.Node = new Node(tk[0]);
-            tk[0].value.Node->Insert(tk[2].value.Node);
-
-            return tk[0];    
-        }
-
-        // Fail
-        lexer_.StateRollback(state);
-        tk[0].type = wTokenType::wFail;
-        return tk[0];
-    }
-
-    wToken GetG() {
-        // Initial
-        wState state = lexer_.State();
-        wToken tk[4] = {};
-
-        // Branch 1
-        if ((tk[1] = GetDeclarations()).type == wTokenType::wUnion
-         && (tk[2] = GetRules()).type == wTokenType::wRules
-         && (tk[3] = GetEOF()).type == wTokenType::wEOF) {
-            tk[0].type = wTokenType::wProgram;
-
-            tk[0].value.Node = new Node(tk[0]);
-            tk[0].value.Node->Insert(tk[1].value.Node);
-            tk[0].value.Node->Insert(tk[2].value.Node);
-
-            tk[0].value.Node->GraphicsDump();
-
-            return tk[0];
+        switch (token.type) {
+        case wTokenType::: {
+            
+        } break;
         
+        default:
+            Error(ret);
+            return ret;
         }
 
-        lexer_.StateRollback(state);
+        return ret;
+    }*/
 
-        // Branch 2
-        if ((tk[1] = GetRules()).type == wTokenType::wRules
-         && (tk[2] = GetEOF()).type == wTokenType::wEOF) {
-            tk[0].type = wTokenType::wProgram;
+    wToken GetDepend() { // <Depend> : [[<ID> | <Letter> | '[' <Depend> ']'   ['+' | '*' | '~' | '?' ['+' | '*' | '~']~]?~]? [<Code>]~]+ ['|' <Depend>]*
+        InitRule(Depend);
 
-            tk[0].value.Node = new Node(tk[0]);
-            tk[0].value.Node->Insert(tk[1].value.Node);
+        if (!View(ID) && !View(Letter) && !View(SqBracketL)) // [ ]+
+            error("expected <ID> or <Letter> or '[' before %s");
 
-            std::cerr << "OK\n";
-            tk[0].value.Node->GraphicsDump();
+        while (View(ID) || View(Letter) || View(SqBracketL)) { // [ ]*
+            switch (token.type) {
+            case wTokenType::wID: { // <ID>
+                Get(ID);
+                InsertToken();
+            } break;
 
-            return tk[0];
+            case wTokenType::wLetter: { // <Letter>
+                Get(Letter);
+                InsertToken();
+            } break;
+
+            case wTokenType::wSqBracketL: { // '['
+                Get(SqBracketL); // '['
+                Get(Depend); // <Depend>
+                wNode* save_depend = token.value.Node;
+                InsertNode();
+                Get(SqBracketR); // ']'
+
+                token = lexer_.ViewToken();
+                switch (token.type) {
+                case wTokenType::wPlus: { // '+'
+                    Get(Plus);
+                    save_depend->data_.type = wTokenType::wBlock1N;
+                } break;
+
+                case wTokenType::wAsterisk: { // '*'
+                    Get(Asterisk);
+                    save_depend->data_.type = wTokenType::wBlock0N;
+                } break;
+
+                case wTokenType::wTilde: { // '~'
+                    Get(Tilde);
+                    save_depend->data_.type = wTokenType::wBlock01;
+                } break;
+
+                case wTokenType::wQuestion: { // '?'
+                    Get(Question);
+
+                    token = lexer_.ViewToken();
+                    switch (token.type) {
+                    case wTokenType::wPlus: { // '?+'
+                        Get(Plus);
+                        save_depend->data_.type = wTokenType::wBlockQ1N;
+                    } break;
+
+                    case wTokenType::wAsterisk: { // '?*'
+                        Get(Asterisk);
+                        save_depend->data_.type = wTokenType::wBlockQ0N;
+                    } break;
+
+                    case wTokenType::wTilde: { // '?~'
+                        Get(Tilde);
+                        save_depend->data_.type = wTokenType::wBlockQ01;
+                    } break;
+                    
+                    default:
+                        save_depend->data_.type = wTokenType::wBlockQ;
+                        break;
+                    }
+                } break;
+
+                default: // '?'
+                    ret_val.value.Node->kids_.PopBack();
+                    ret_val.value.Node->InsertKid(save_depend);
+                    delete save_depend;
+                    break;
+                }
+
+            } break;
+            
+            default:
+                break;
+            }
+
+            if (View(Code)) { // <Code>~
+                Get(Code);
+                InsertNode();
+            }
+        }
+        
+        // ['|' <Depend>]*
+        while (View(VertLine)) { // [ ]*
+            Get(VertLine); // '|'
+            InsertToken();
+            
+            Get(Depend); // <Depend>
+            InsertKids();
         }
 
-        // Fail
-        std::cout << "Fail\n";
-        lexer_.StateRollback(state);
-        tk[0].type = wTokenType::wFail;
-        return tk[0];
+        Success();
+    }
+
+    wToken GetRule() { // <Rule> : <ID> ':' <Depend>
+        InitRule(Rule);
+
+        Get(ID); // <ID> 
+        InsertToken();
+
+        Get(Colon); // ':'
+
+        Get(Depend); // <Depend>
+        InsertKids();
+
+        Get(Semicolon); // ';'
+
+        Success();
+    }
+
+    wToken GetDeclToken() {
+        InitRule(DeclToken);
+
+        Success();
+    }
+
+    wToken GetUnion() {
+        InitRule(Union);
+
+        Success();
+    }
+
+    wToken GetDeclarations() { // [<Keyword> [<Code> | <ID>]?]*
+        InitRule(Declarations);
+
+        while (View(Keyword)) { // [ ]*
+            Get(Keyword); // <Keyword>
+            InsertToken();
+
+            if (View(Code)) { // <Code>
+                Get(Code);
+
+                static int cnt = 0;
+                if (cnt++) {
+                    error("redefinition union");
+                } else {
+                    InsertNode();
+                }
+            } else { // <ID>
+                Get(ID);
+                InsertToken();
+            }
+        }
+
+        Success();
+    }
+
+    wToken GetPreamble() {
+        InitRule(Preamble);
+
+        Success();
+    }
+
+
+    wToken GetG() { // <G> : [<Preamble>]~ <Declarations> '%%' [<Rule>]+ '%%'
+        InitRule(G);
+
+        Get(Declarations); // <Declarations>
+        InsertNode();
+
+        Get(Percent); // '%%'
+
+        // [<Rule>]+
+        if (!View(ID)) // <Rule>+
+            error("expected <ID> before %s");
+
+        while (View(ID)) { // <Rule>*
+            Get(Rule);
+            InsertNode();
+        }
+
+        if (!View(Percent))
+            error("expected <Rule> or '%%%' before %s");
+        else 
+            Get(Percent); // '%%'
+
+        Get(EOF); // <EOF>
+
+        Success();
     }
 
     wToken StartParce() {
@@ -294,11 +278,26 @@ public:
         //    tk.Print();
         //}
         wToken tk = GetG();
-        Generator gen(tk.value.Node);
-        gen.Generate();
+        //tk.Print();
+        std::cout << "Parse OK\n";
+        tk.value.Node->GraphicsDump();
+        std::cout << "Graph OK\n";
+        //Generator gen(tk.value.Node);
+        //gen.Generate();
         return tk;
         //if (tk.type != wTokenType::wFail) GetG().value.Node->Print();
-        return tk;
+        Token t;
+        return t;
+    }
+
+private:
+    wToken Error(wToken& ret, wToken& token, const char* text) {
+        if (text[0] == '\0')
+            wLogger.PrintError("test/simple_grammar.txt", token.line, token.column, "expected %s, but find %s", ret.GetTypeName(), token.GetTypeName()); // TODO: Add file name
+        else if (ret.type == wTokenType::wKeyword) {
+            wLogger.LogError("test/simple_grammar.txt", token.line, token.column, text); // TODO: Add file name
+        } else 
+            wLogger.PrintError("test/simple_grammar.txt", token.line, token.column, text, token.GetTypeName()); // TODO: Add file name
     }
 };
 

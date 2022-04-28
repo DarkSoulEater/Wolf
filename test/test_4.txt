@@ -1,0 +1,6 @@
+<G> : <Preamble> <Declarations> [<Rule>]+;
+<Declarations> : [<Union>]~ [<DeclToken>]* ;
+<Union> : '#' <Keyword> <Code>;
+<DeclToken> : '#' <Keyword> <Type>;
+<Rule> : <ID> ':' [<Depend>]+ [<Code>]~ ['|' [<Depend>]+ [<Code>]~]*;
+<Depend> : '[' <Depend> ']'   ['+', '*', '~', '?' ['*', '+', <none>], <none>]  |  <Depend> [',' <Depend>]* | [<ID>, <Letter>]?+;

@@ -65,17 +65,22 @@ public:
         }
 
         // -----------------------------------------------
-
+        
         if (data_.type == wTokenType::wID) {
             fprintf(file, "Node%llu[shape=\"rectangle\", color=black, label=\"ID:%s\"];\n", this, data_.value.ID);
         } else if (data_.type == wTokenType::wLetter) {
-            fprintf(file, "Node%llu[shape=\"rectangle\", color=black, label=\"%c\"];\n", this, data_.value.Letter);
+            if (data_.value.Letter == '\'' || data_.value.Letter == '\"' || data_.value.Letter == '\\') {
+                fprintf(file, "Node%llu[shape=\"rectangle\", color=black, label=\"\\%c\"];\n", this, data_.value.Letter);
+            } else {
+                fprintf(file, "Node%llu[shape=\"rectangle\", color=black, label=\"%c\"];\n", this, data_.value.Letter);
+            }
         } else {
-            fprintf(file, "Node%llu[shape=\"rectangle\", color=black, label=%s];\n", this, GetTypeName());
+            fprintf(file, "Node%llu[shape=\"rectangle\", color=black, label=\"%s\"];\n", this, GetTypeName());
         }
 
         for (size_t i = 0; i < kids_.Size(); ++i) {
             fprintf(file, "Node%llu->Node%llu[dir=both];\n", this, kids_[i]);
+
             kids_[i]->GraphicsDump(file);
         }
         

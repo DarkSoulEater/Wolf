@@ -3,30 +3,9 @@
 
 #include <cstddef>
 
+#define DeclToken(NAME, VAL) w##NAME = VAL,
 enum class wTokenType {
-    wNone       = 0,
-    wLexerError = 1,
-    wFail       = 2,
-    wEOF        = 3,
-    wKeyword    = 4,
-
-    wID         = 10,
-    wLetter     = 11,
-    wCode       = 12,
-    wLine       = 13,
-    wIndent     = 14,
-    wColon      = 58,  // ':'
-    wSemicolon  = 59,  // ';'
-    wVertLine   = 124, // '|'
-
-    wUnion,
-    wDeclarations,
-
-    wRule,
-    wRules,
-    wDepend,
-    wDepends,
-    wProgram,
+    #include "Token.decl"
 };
 
 struct wToken;
@@ -55,73 +34,69 @@ struct wToken {
 
     const char* GetTypeName() const {
     switch (type) {
-    case wTokenType::wRule:
-        return "Rule";
-        break;
+    case wTokenType::wPercent:
+        return "'\%\%'";
 
-    case wTokenType::wRules:
-        return "Rules";
-        break;
+    case wTokenType::wAsterisk:
+        return "'*'";
 
-    case wTokenType::wDepend:
-        return "Depend";
-        break;
+    case wTokenType::wPlus:
+        return "'+'";
 
-    case wTokenType::wDepends:
-        return "Depends";
-        break;
-
-    case wTokenType::wID:
-        return "ID";
-        break;
-
-    case wTokenType::wLetter:
-        return "Letter";
-        break;
-
-    case wTokenType::wFail:
-        return "Fail";
-        break;
-
-    case wTokenType::wEOF:
-        return "EOF";
-        break;
-
-    case wTokenType::wLexerError:
-        return "LexerError";
-        break;
+    case wTokenType::wComma:
+        return "','";
 
     case wTokenType::wColon:
-        return "Colon";
-        break;
+        return "':'";
 
     case wTokenType::wSemicolon:
-        return "Semicolon";
-        break;
-    
+        return "';'";
+
+    case wTokenType::wQuestion:
+        return "'?'";
+
+    case wTokenType::wSqBracketL:
+        return "'['";
+
+    case wTokenType::wSqBracketR:
+        return "']'";
+
     case wTokenType::wVertLine:
-        return "VertLine";
-        break;
+        return "'|'";
 
-    case wTokenType::wCode:
-        return "Code";
-        break;
+    case wTokenType::wTilde:
+        return "'~'";
 
-    case wTokenType::wKeyword:
-        return "Keyword";
-        break;
+    case wTokenType::wBlock1N:
+        return "[ ]+";
 
-    case wTokenType::wUnion:
-        return "Union";
-        break;
+    case wTokenType::wBlock0N:
+        return "[ ]*";
 
-    case wTokenType::wLine:
-        return "Line";
-        break;
+    case wTokenType::wBlock01:
+        return "[ ]~";
 
-    case wTokenType::wIndent:
-        return "Indent";
+    case wTokenType::wBlockQ:
+        return "[ ]?";
+
+    case wTokenType::wBlockQ1N:
+        return "[ ]?+";
+
+    case wTokenType::wBlockQ0N:
+        return "[ ]?*";
+
+    case wTokenType::wBlockQ01:
+        return "[ ]?~";
+    default:
         break;
+    }
+
+    #define DeclToken(NAME, VAL)    \
+        case wTokenType::w##NAME:   \
+            return #NAME;           \
+    
+    switch (type) {
+        #include "Token.decl"
     
     default:
         return "Undefined";

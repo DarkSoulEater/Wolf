@@ -1,15 +1,7 @@
-%union {
-
-}
-
-%token <ID>
-%token <Letter>
-
 // Lexer
 %%
 
 // Parser 
-<T> : <P> '\"';
 <G> : [<Preamble>]~ [<Declarations>]~ [<Rule>]+
 ;
 <Preamble> : <TODO>// TODO
@@ -26,6 +18,3 @@
 ;
 
 %% 
-//<alo>:  '"';
-//<alo>:  ''';
-//<alo>:  '\';
