@@ -1,0 +1,6 @@
+//#define DeclKeyword(NAME)
+
+DeclKeyword(union)
+DeclKeyword(token)
+
+#undef DeclKeyword

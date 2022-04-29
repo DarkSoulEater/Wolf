@@ -5,6 +5,7 @@
 #include <immintrin.h>
 #include "HashTable.hpp"
 
+/*
 struct wKeyword {
     char val_[32] = {};
 
@@ -31,5 +32,5 @@ struct wKeywrodHash {
 };
 
 using HashTableKeyword = HashTable<wKeyword, HashTableCell<wKeyword, wKeywrodHash>, wKeywrodHash, HashTableGrower<>>;
-
+*/
 #endif // WOLF_HASH_TABLE_HPP

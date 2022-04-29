@@ -5,37 +5,30 @@
 
 #include "Logger.hpp"
 #include "Tree.hpp"
-#include "Buffer.hpp"
 #include "Token.hpp"
+#include "Type.hpp"
+#include "Keyword.hpp"
+#include "HashMap.hpp"
+#include "Global.hpp"
 
 typedef size_t wState;
 
 template <typename Token>
 class wLexer {
 private:
-    const char* file_name_;
-
-    Buffer buffer_;
     Vector<wToken> tokens_;
 
     wState active_token_;
 
-    size_t line_;
-    size_t column_;
-
-    char* data_;
+private:
+    HashMap<MapString32, wKeyword> keyword_table_;
 public:
-    wLexer(const char* file_name) : buffer_(file_name), active_token_(0), line_(1), column_(0), file_name_(file_name) {
-        data_ = (char*) buffer_.GetData();
+    wLexer(void* data) : active_token_(0), line_(1), column_(0), data_((char*)data) {
+        #define DeclKeyword(NAME) keyword_table_.Insert(#NAME, wKeyword::w##NAME);
+        #include "Keyword.decl"
     }
 
     ~wLexer() {}
-
-    inline wState State() const { return active_token_; }
-
-    void StateRollback(wState state) {
-        active_token_ = state;
-    }
 
     Token GetToken() {
         assert(active_token_ <= tokens_.Size());
@@ -59,7 +52,7 @@ public:
         return token;     
 
     Token Lex() {
-        if (active_token_ < tokens_.Size()) return tokens_[active_token_++];
+        assert(active_token_ < tokens_.Size());
 
         char c = 0;
         while (std::isspace(c = Getc())) 
@@ -84,12 +77,12 @@ public:
                 }
 
                 if (c == '\0') {
-                    wLogger.PrintError(file_name_, line, column + 1, "expected end of comment /* */");
+                    wLogger.PrintError(InputFileName, line, column + 1, "expected end of comment /* */");
                     ReturnToken(wLexerError);
                 }
 
             } else {
-                wLogger.PrintError(file_name_, line_, column_, "expected comment");
+                wLogger.PrintError(InputFileName, line_, column_, "expected comment");
                 ReturnToken(wLexerError);
             }
             return Lex();
@@ -99,8 +92,8 @@ public:
             token.value.ID = data_;
 
             if (!isalpha(c = Getc()) && c != '_') {
-                if (c == '>') wLogger.PrintError(file_name_, line_, column_, "expected identifier in \"<>\" (example <auf>)");
-                else wLogger.PrintError(file_name_, line_, column_, "incorrect identifier ([a-Z,_][a-Z,0-9,_]*)");
+                if (c == '>') wLogger.PrintError(InputFileName, line_, column_, "expected identifier in \"<>\" (example <auf>)");
+                else wLogger.PrintError(InputFileName, line_, column_, "incorrect identifier ([a-Z,_][a-Z,0-9,_]*)");
                 ReturnToken(wLexerError);
             }
             
@@ -109,7 +102,7 @@ public:
             while (std::isalpha(c = Getc()) || c == '_' || isdigit(c)) {
                 if (++id_len == 32) {
                     *(data_ - 1) = '\0';
-                    wLogger.LogWarning(file_name_, line_, column_, "identifier too long (must be < 32). The rest will be eaten by wolves");
+                    wLogger.LogWarning(InputFileName, line_, column_, "identifier too long (must be < 32). The rest will be eaten by wolves");
                 }
             }
             
@@ -118,19 +111,19 @@ public:
                 ReturnToken(wID);
             }
             
-            wLogger.PrintError(file_name_, line_, column_, "expected '>' befor '%c'", c);
+            wLogger.PrintError(InputFileName, line_, column_, "expected '>' befor '%c'", c);
             ReturnToken(wLexerError);
         } break;
 
         case '\'':
             c = Getc();
             if (c == '\n') {
-                wLogger.PrintError(file_name_, line_, column_, "'\\n' in valid palce");
+                wLogger.PrintError(InputFileName, line_, column_, "'\\n' in valid palce");
                 ReturnToken(wLexerError);
             }
 
             if (c == '\'') {
-                wLogger.PrintError(file_name_, line_, column_, "expected letter in ' '");
+                wLogger.PrintError(InputFileName, line_, column_, "expected letter in ' '");
                 ReturnToken(wLexerError);
             }
 
@@ -144,7 +137,7 @@ public:
                     break;
                 
                 default:
-                    wLogger.PrintError(file_name_, line_, column_, "uncorrect escape sequences in ' '");
+                    wLogger.PrintError(InputFileName, line_, column_, "uncorrect escape sequences in ' '");
                     ReturnToken(wLexerError);
                     break;
                 }
@@ -156,7 +149,7 @@ public:
             if (c == '\'') {
                 ReturnToken(wLetter);
             }
-            wLogger.PrintError(file_name_, line_, column_, "expected '\'' at end of token");
+            wLogger.PrintError(InputFileName, line_, column_, "expected '\'' at end of token");
             ReturnToken(wLexerError);
             break;
 
@@ -174,7 +167,7 @@ public:
                 // If EOF
                 if (c == '\0') {
                     delete token.value.Node;
-                    wLogger.PrintError(file_name_, line, column, "expected '}' at end of input");
+                    wLogger.PrintError(InputFileName, line, column, "expected '}' at end of input");
                     ReturnToken(wLexerError);
                 }
 
@@ -222,13 +215,30 @@ public:
                 c = Getc();
                 ReturnToken(wPercent);
             }
-            char* ptr = data_;  
-            while (isalpha(*data_))
+            
+            static char buf[33];
+            MapString32 str;
+            int i = 0;
+
+            while (isalpha(*data_)) {
                 c = Getc();
-            
-            ReturnToken(wKeyword);
-            
-            //ReturnToken(wLexerError);
+
+                if (i < 33) {
+                    str[i++] = c;
+                } else {
+                    wLogger.LogWarning(InputFileName, line_, column_, "too long word, all characters after 32 will be ignored");
+                }
+            }
+
+            auto res = keyword_table_.Find(str);
+            if (res != nullptr) {
+                wLogger.Log(InputFileName, line_, column_, "Is key word! Auuuuuuu!!!");
+                token.value.Keyword = *res;
+                ReturnToken(wKeyword);
+            } else {
+                wLogger.LogError(InputFileName, line_, column_, "Not key word! Wuuuuuu(((");
+                ReturnToken(wLexerError);
+            }
         } break;
 
         case '*':
@@ -276,7 +286,7 @@ public:
             break;
         
         default:
-            wLogger.PrintError(file_name_, line_, column_, "\'%c\' an unknown character in this scope", c);
+            wLogger.PrintError(InputFileName, line_, column_, "\'%c\' an unknown character in this scope", c);
             ReturnToken(wLexerError);
             break;
         }
@@ -284,6 +294,11 @@ public:
     #undef ReturnToken
 
 private: 
+    size_t line_;
+    size_t column_;
+
+    char* data_;
+
     char Getc() {
         char*& c = data_;
         if (*c == '\0') return *c;

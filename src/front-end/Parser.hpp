@@ -7,6 +7,9 @@
 #include "Parser.hpp"
 #include "Tree.hpp"
 #include "Generator.hpp"
+#include "HashMap.hpp"
+#include "Type.hpp"
+#include "Global.hpp"
 
 #pragma GCC diagnostic ignored "-Wswitch-enum"
 
@@ -15,10 +18,8 @@ class wParser {
 private:
     wLexer<Token> lexer_;
 
-    const wState& lexer_state_;
-
 public:
-    wParser(const char* file_name) : lexer_(file_name), lexer_state_(lexer_.State()) {}
+    wParser(void* data) : lexer_(data) {}
     ~wParser() {}
 
 #define DeclLexerTarget(NAME)                       \
@@ -59,7 +60,9 @@ public:
     #define View(TYPE) ((token = lexer_.ViewToken()).type == wTokenType::w##TYPE)
     #define error(TEXT) Error(ret_val, token, TEXT)
 
-    #define SaveLocation() ;
+    #define SaveLocation() {                                \
+        ret_val.value.Node->data_.line = token.line;        \
+        ret_val.value.Node->data_.column = token.column;    }
 
     #define ValNode ret_val.value.Node
     #define RetVal ret_val.value
@@ -69,23 +72,6 @@ public:
     #define InsertToken() ret_val.value.Node->Insert(token)
     #define InsertNode() ret_val.value.Node->Insert(token.value.Node)
     #define InsertKids() ret_val.value.Node->InsertKid(token.value.Node)
-
-    /*wToken Get() {
-        wToken ret(0, 0, wTokenType::);
-        wToken token = lexer_.ViewToken();
-
-        switch (token.type) {
-        case wTokenType::: {
-            
-        } break;
-        
-        default:
-            Error(ret);
-            return ret;
-        }
-
-        return ret;
-    }*/
 
     wToken GetDepend() { // <Depend> : [[<ID> | <Letter> | '[' <Depend> ']'   ['+' | '*' | '~' | '?' ['+' | '*' | '~']~]?~]? [<Code>]~]+ ['|' <Depend>]*
         InitRule(Depend);
@@ -111,6 +97,8 @@ public:
                 wNode* save_depend = token.value.Node;
                 InsertNode();
                 Get(SqBracketR); // ']'
+                save_depend->data_.line = token.line;
+                save_depend->data_.column = token.column;
 
                 token = lexer_.ViewToken();
                 switch (token.type) {
@@ -190,6 +178,7 @@ public:
         InitRule(Rule);
 
         Get(ID); // <ID> 
+        SaveLocation();
         InsertToken();
 
         Get(Colon); // ':'
@@ -202,24 +191,13 @@ public:
         Success();
     }
 
-    wToken GetDeclToken() {
-        InitRule(DeclToken);
-
-        Success();
-    }
-
-    wToken GetUnion() {
-        InitRule(Union);
-
-        Success();
-    }
-
     wToken GetDeclarations() { // [<Keyword> [<Code> | <ID>]?]*
         InitRule(Declarations);
 
         while (View(Keyword)) { // [ ]*
             Get(Keyword); // <Keyword>
             InsertToken();
+            
 
             if (View(Code)) { // <Code>
                 Get(Code);
@@ -274,30 +252,162 @@ public:
     }
 
     wToken StartParce() {
-        //for (wToken tk = lexer_.GetToken(); tk.type != wTokenType::wEOF; tk = lexer_.GetToken()) {
-        //    tk.Print();
-        //}
-        wToken tk = GetG();
-        //tk.Print();
-        std::cout << "Parse OK\n";
-        tk.value.Node->GraphicsDump();
-        std::cout << "Graph OK\n";
-        //Generator gen(tk.value.Node);
-        //gen.Generate();
-        return tk;
-        //if (tk.type != wTokenType::wFail) GetG().value.Node->Print();
-        Token t;
-        return t;
+        wToken token = GetG();
+
+        if (syntax_state_) {
+            token.value.Node->GraphicsDump();
+
+            SemanticAnalysis(token.value.Node);
+
+            token.value.Node->GraphicsDump();
+
+            if (semantic_state_) return token;
+            
+            delete token.value.Node;
+            return wToken(wTokenType::wFail);
+        }
+
+        delete token.value.Node;
+        return wToken(wTokenType::wFail);
     }
 
 private:
+    bool syntax_state_ = true;
+
     wToken Error(wToken& ret, wToken& token, const char* text) {
         if (text[0] == '\0')
-            wLogger.PrintError("test/simple_grammar.txt", token.line, token.column, "expected %s, but find %s", ret.GetTypeName(), token.GetTypeName()); // TODO: Add file name
+            wLogger.PrintError(InputFileName, token.line, token.column, "expected %s, but find %s", ret.GetTypeName(), token.GetTypeName()); // TODO: Add file name
         else if (ret.type == wTokenType::wKeyword) {
-            wLogger.LogError("test/simple_grammar.txt", token.line, token.column, text); // TODO: Add file name
+            wLogger.LogError(InputFileName, token.line, token.column, text); // TODO: Add file name
         } else 
-            wLogger.PrintError("test/simple_grammar.txt", token.line, token.column, text, token.GetTypeName()); // TODO: Add file name
+            wLogger.PrintError(InputFileName, token.line, token.column, text, token.GetTypeName()); // TODO: Add file name
+
+        syntax_state_ = false;
+    }
+
+    HashMap<MapString32, int> map_;
+
+private:
+    bool semantic_state_ = true;
+
+    HashMap<MapString32, char> lexer_token_;
+    HashMap<MapString32, wNode*> target_token_;
+    HashMap<MapString32, wNode*> rule_token_;
+
+    void SemanticAnalysis(wNode* node) {
+        size_t i = 0;
+
+        if (node->kids_[i]->data_.type == wTokenType::wDeclarations) {
+            wNode* kid = node->kids_[i];
+
+            for (size_t j = 0; j < kid->kids_.Size(); j += 2) {
+                if (kid->kids_[j]->data_.value.Keyword == wKeyword::wtoken) {
+                    auto res = rule_token_.Insert(MapString32(kid->kids_[j + 1]->data_.value.ID), kid->kids_[j + 1]);
+                    if (!res) {
+                        wLogger.LogWarning(InputFileName, kid->kids_[j]->data_.line, kid->kids_[j]->data_.column, "redefenition token, why?");
+                    }
+                } else {
+                    // NOINT
+                }
+            }
+
+            ++i;
+        }
+
+        for (; i < node->kids_.Size(); ++i) {
+            wNode* kid = node->kids_[i];
+
+            if (kid->data_.type == wTokenType::wRule) {
+                auto res = rule_token_.Insert(kid->kids_[0]->data_.value.ID, kid);
+                if (!res){
+                    auto find_res = rule_token_.Find(kid->kids_[0]->data_.value.ID);
+                    if (find_res == nullptr) assert(0 && "Map table error!");
+
+                    wNode* rule = *find_res;
+                    kid->kids_[0]->data_.type = wTokenType::wVertLine;
+                    rule->InsertKid(kid);
+                    kid->data_.type = wTokenType::wNone;
+
+                    // Warning
+                    wLogger.PrintWarning(InputFileName, kid->kids_[0]->data_.line, kid->kids_[0]->data_.column, 
+                                        "redefinition rule <%s> (%llu:%llu), rules will be merged into one flock",
+                                        (*find_res)->data_.value.ID, 
+                                        (*find_res)->data_.line, 
+                                        (*find_res)->data_.column);
+                }
+
+                for (size_t j = 1; j < kid->kids_.Size(); ++j) {
+                    AnalysisRule(kid->kids_[j], kid);
+                }
+            }
+        }
+
+#ifdef WOLF_DB_PRINT_SEMANTIC_TOKEN
+        wLogger.Log("Lexer token:");
+        for (auto u : lexer_token_) {
+            std::cout << "    " << u.first.str << "\n";
+        }
+
+        std::cout << "\n";
+
+        wLogger.Log("Rule token:");
+        for (auto u : rule_token_) {
+            std::cout << "    " << u.second->data_.value.ID << "\n";
+        }
+
+        std::cout << "\n";
+
+        wLogger.Log("Targer token:");
+        for (auto u : target_token_) {
+            std::cout << "    " << u.second->data_.value.ID << "\n";
+        }
+        std::cout << "\n";
+#endif // WOLF_DB_PRINT_SEMANTIC_TOKEN
+
+        for (auto& trg : target_token_) {
+            auto res = rule_token_.Find(trg.first);
+            if (!res) {
+                wNode* target = trg.second;
+                semantic_state_ = false;
+                wLogger.PrintError(InputFileName, target->data_.line, target->data_.column, "there is no rule generating <%s>, lone wolf", target->data_.value.ID);
+            }
+        }
+    }
+
+    void AnalysisRule(wNode* node, wNode* parent) {
+        switch (node->data_.type) {
+        case wTokenType::wID:
+            target_token_.Insert(node->data_.value.ID, node); // TODO: add vector to save all node
+            break;
+        
+        case wTokenType::wLetter:
+            //target_token_.Insert(node->data_.value., node); // TODO
+            break;
+
+        default: {
+            for (size_t i = 0; i < node->kids_.Size(); ++i) {
+                AnalysisRule(node->kids_[i], node);
+            }
+        } break;
+        }
+
+        // Check not branches [ ]?
+        if ((int)node->data_.type >= (int)wTokenType::wBlockQ && (int)node->data_.type <= (int)wTokenType::wBlockQ01) {
+            bool branches = false;
+            for (size_t i = 0; i < node->kids_.Size(); ++i) {
+                branches |= node->kids_[i]->data_.type == wTokenType::wVertLine;
+            }
+
+            if (!branches) {
+                wLogger.PrintWarning(InputFileName, node->data_.line, node->data_.column, "find %s without branches; no branches, no fire", node->data_.GetTypeName());
+
+                if (node->data_.type != wTokenType::wBlockQ) {
+                    node->data_.type = wTokenType((int)node->data_.type - 4);
+                }
+
+                return;
+            }
+        }
     }
 };
 

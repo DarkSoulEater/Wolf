@@ -1,6 +1,8 @@
 #ifndef WOLD_LOGGER_HPP
 #define WOLD_LOGGER_HPP
 
+#include <cstddef>
+
 class Logger {
 private:
 public:
@@ -9,7 +11,7 @@ public:
 
     void Log(const char* text); // In stdout
     void Log(const char* file_name, size_t line, size_t column, const char* text); // In stdout
-    //void Print(const char* format, ...); In stdout
+    //void PrintLog(const char* format, ...); In stdout
 
     void LogDebug(const char* text); // In stderr
     void LogDebug(const char* file_name, size_t line, size_t column, const char* text); // In stderr
@@ -22,7 +24,8 @@ public:
 
     void LogWarning(const char* text); // In stdout
     void LogWarning(const char* file_name, size_t line, size_t column, const char* text); // In stdout
-    //void PrintWarning(const char* format, ...); // In stdout
+    void PrintWarning(const char* format, ...); // In stdout
+    void PrintWarning(const char* file_name, size_t line, size_t column, const char* format, ...); // In stdout
 };
 
 extern Logger wDebug;

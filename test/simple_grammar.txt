@@ -4,19 +4,23 @@
 
 %token <ID>
 %token <Letter>
+%token <Code>
+%token <Keyword>
+
+%token <a>
+%token <b>
+%token <c>
 
 // Lexer
 %%
 
 // Parser 
+<Q> : [<Q> <a> [<r> | <t>]? [<E> <T>]?]? [<a>]?+ [<b>]?* [<c>]?~;
 <T> : <P> '\"';
-<G> : [<Preamble>]~ [<Declarations>]~ [<Rule>]+
-;
-<Preamble> : <TODO>// TODO
+<T> : <KEK>;
+<G> : [<Declarations>]~ [<Rule>]+
 ;
 <Declarations> : [<Union>]~ [<DeclToken>]* // TODO
-;
-<Union> : '#' <Keyword> <Code> // TODO
 ;
 <DeclToken> : '#' <Keyword> <Type> // TODO
 ;
@@ -24,8 +28,5 @@
 ;
 <Depend> : [[<ID> | <Letter> | '[' <Depend> ']'   ['+' | '*' | '~' | '?' ['+' | '*' | '~']~]?~]? [<Code>]~]+ ['|' <Depend>]*
 ;
-
-%% 
-//<alo>:  '"';
-//<alo>:  ''';
-//<alo>:  '\';
+<T> : <MEM>;
+%%

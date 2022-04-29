@@ -45,7 +45,7 @@ struct Hash {
 
 template<typename Key, typename Hash>
 struct HashTableCell {
-    Key key;
+//    Key key;
 
     //HashTableCell() {}
 
@@ -68,6 +68,11 @@ protected:
     size_t saved_hash_;
 
     bool is_zero_ = true;
+
+public:
+    Key key;
+    HashTableCell* next_ = nullptr;
+    HashTableCell* prev_ = nullptr;
 };
 
 
@@ -109,6 +114,8 @@ template<
 >
 class HashTable : protected Hash {
 protected:
+    friend class HashTableCell<Key, Hash>;
+
     using HashValue = size_t;
     using Self = HashTable;
 
@@ -211,6 +218,7 @@ protected:
         // Copy to a new location and zero the old one.
         x.SetHash(hash_value);
         memcpy(static_cast<void*>(&buf[place_value]), &x, sizeof(x));
+        if (x.prev_) x.prev_->next_ = &buf[place_value];
         x.SetZero();
 
         return place_value;
@@ -221,10 +229,56 @@ protected:
         // TODO:
     }
 
+    // Iterator
+    class Iterator : public std::iterator<std::input_iterator_tag, Cell> {
+        friend class HashTable;
+        //friend class Cell;
+    private:
+        Iterator(Cell* p) : p(p) {}
+    public:
+        Iterator(const Iterator& it) : p(it.p) {}
+
+        bool operator!=(Iterator const& other) const { return p != other.p; }
+
+        bool operator==(Iterator const& other) const { return p == other.p; }
+
+        typename Iterator::reference operator*() const { return *p; };
+
+        Iterator& operator++() {
+            p = p->next_;
+            return *this;
+        }
+
+    private:
+        Cell* p;
+    };
+
+public:
+    using iterator = Iterator;//<HashTableCell<Key, Hash>>;
+    using const_iterator = Iterator;//<const HashTableCell<Key, Hash>>;
+
+    iterator begin() {
+        return head_;
+    }
+
+    iterator end() {
+        return nullptr;
+    }
+
+    const_iterator begin() const {
+        return head_;
+    }
+
+    const_iterator end() const {
+        return nullptr;
+    }
 
 public:
     using LookupResult = Cell*;
     using ConstLookupResult = const Cell*;
+
+    Cell* head_ = nullptr;
+    Cell* tail_ = nullptr;
 
     size_t hash(const Key& x) const { return Hash::operator()(x); }
 
@@ -262,11 +316,22 @@ public:
             buf[new_place] = Cell(key, hash_value);
             ++size_;
 
+            if (head_ == nullptr) {
+                head_ = tail_ = &buf[new_place];
+            } else {
+                tail_->next_ = &buf[new_place];
+                buf[new_place].prev_ = tail_;
+                tail_ = &buf[new_place];
+            }
+
             return {&buf[new_place], true};
         }
 
         return {nullptr, false};
     }
+
+    Cell* Begin() const { return head_; }
+    Cell* End() { return tail_; }
 
     LookupResult ALWAYS_INLINE Find(const Key& key) {
         size_t hash_value = hash(key);

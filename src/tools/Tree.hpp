@@ -78,6 +78,8 @@ public:
             fprintf(file, "Node%llu[shape=\"rectangle\", color=black, label=\"%s\"];\n", this, GetTypeName());
         }
 
+        if (data_.type == wTokenType::wNone) return;
+        
         for (size_t i = 0; i < kids_.Size(); ++i) {
             fprintf(file, "Node%llu->Node%llu[dir=both];\n", this, kids_[i]);
 

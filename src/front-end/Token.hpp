@@ -1,7 +1,11 @@
 #ifndef WOLF_TOKEN_HPP
 #define WOLF_TOKEN_HPP
 
+#pragma GCC diagnostic ignored "-Wswitch-enum"
+
 #include <cstddef>
+#include <iostream>
+#include "Keyword.hpp"
 
 #define DeclToken(NAME, VAL) w##NAME = VAL,
 enum class wTokenType {
@@ -27,7 +31,10 @@ struct wToken {
         char Letter;
         char* str;
         int Indent;
+        wKeyword Keyword;
     } value;
+
+    wToken(wTokenType type) : line(0), column(0), type(type) {} 
 
     wToken(size_t line = 0, size_t column = 0, wTokenType type = wTokenType::wNone) 
         : line(line), column(column), type(type) {}

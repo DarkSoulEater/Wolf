@@ -77,4 +77,20 @@ void Logger::LogWarning(const char* file_name, size_t line, size_t column, const
     std::cout << file_name << ':' << line << ':' << column << ": " << MAGNETA"Warning: "NONE << text << std::endl;
 }
 
-//void Logger::PrintWarning(const char* format, ...) {}
+void Logger::PrintWarning(const char* format, ...) {
+    assert(format);
+    va_list message;
+    va_start(message, format);
+    std::cout << MAGNETA"Warning: "NONE;
+    vfprintf(stderr, format, message);
+    std::cout << std::endl;
+}
+
+void Logger::PrintWarning(const char* file_name, size_t line, size_t column, const char* format, ...) {
+    assert(format);
+    va_list message;
+    va_start(message, format);
+    std::cout << file_name << ':' << line << ':' << column << ": " << MAGNETA"Warning: "NONE;
+    vfprintf(stderr, format, message);
+    std::cout << std::endl;
+}
