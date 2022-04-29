@@ -1,2 +1,2 @@
 # Wolf
- Compiler Generator
+ Parser generator
