@@ -5,7 +5,9 @@
 
 #include <cstddef>
 #include <iostream>
+
 #include "Keyword.hpp"
+#include "Set.hpp"
 
 #define DeclToken(NAME, VAL) w##NAME = VAL,
 enum class wTokenType {
@@ -34,10 +36,46 @@ struct wToken {
         wKeyword Keyword;
     } value;
 
+#ifndef WOLF_CHECK_LL1
+    Set<wTokenType> next;
+    Set<wTokenType> follow;
+#endif
+
     wToken(wTokenType type) : line(0), column(0), type(type) {} 
 
     wToken(size_t line = 0, size_t column = 0, wTokenType type = wTokenType::wNone) 
         : line(line), column(column), type(type) {}
+
+#ifndef WOLF_CHECK_LL1
+    wToken(const wToken& token) : next(token.next) {
+        type = token.type;
+        line = token.line;
+        column = token.column;
+        value = token.value;
+
+        // TODO:
+        //next.Combining(token.next);
+        //follow.Combining(token.follow); 
+    }
+
+    wToken(wToken&& token) : next(std::move(token.next)), follow(std::move(token.follow)) {
+        std::swap(type, token.type);
+        std::swap(line, token.line);
+        std::swap(column, token.column);
+        std::swap(value, token.value);
+    }
+
+    wToken& operator=(const wToken& token) {
+        type = token.type;
+        line = token.line;
+        column = token.column;
+        value = token.value;
+
+        // TODO:
+        //next.Combining(token.next);
+        // follow.Combining(token.follow);
+    }
+#endif
 
     const char* GetTypeName() const {
     switch (type) {

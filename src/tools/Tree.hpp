@@ -3,8 +3,9 @@
 
 #include <assert.h>
 #include <iostream>
-#include <Token.hpp>
-#include <Vector.hpp>
+
+#include "Token.hpp"
+#include "Vector.hpp"
 
 template<typename T>
 class Node {
@@ -14,6 +15,12 @@ public:
 
     Node() {}
     Node(const T& data) : data_(data) {}
+
+    ~Node() {
+        for (size_t i = 0; i < kids_.Size(); ++i) {
+            delete kids_[i];
+        }
+    }
 
     void Insert(Node* node) {
         kids_.PushBack(node);

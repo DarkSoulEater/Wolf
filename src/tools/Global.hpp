@@ -9,9 +9,15 @@ extern const char* InputFileName;
 
 extern bool FlagWithoutBranches;
 
-// Debug
-#define WOLF_DB_LOG_PARCE_ARV
+extern bool FlagSkipUselessRule;
 
-#define WOLF_DB_PRINT_SEMANTIC_TOKEN
+// Debug
+#define WOLF_DB_LOG_PARCE_ARG
+
+//#define WOLF_DB_PRINT_SEMANTIC_TOKEN
+
+//#define WOLF_DB_LOG_KEYWORD
+
+#define WOLF_CHECK_LL1
 
 #endif // WOLF_GLOBAL_HPP

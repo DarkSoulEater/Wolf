@@ -5,13 +5,15 @@
 #include "Generator.hpp"
 #include "Global.hpp"
 
+#include "Set.hpp"
+
 void ParseArgs(const int argc, const char* argv[]);
 
 int main(const int argc, const char* argv[]) {
     ParseArgs(argc, argv);
 
-    if (InputFileName[0] == '\0') {
-        wLogger.LogError("No input filename");
+    if (InputFileName == nullptr) {
+        wLogger.LogError("no input file");
         return 0;
     }
 
@@ -21,14 +23,17 @@ int main(const int argc, const char* argv[]) {
     auto token = parser.StartParce();
     
     if (token.type != wTokenType::wFail) {
-        
-    }
+        wGenerator generator(token.value.Node);
+        generator.Generate("doc/res/out.txt");
+    } else printf("ERR");
     return 0;
 }
 
 void ParseArgs(const int argc, const char* argv[]) {
-    for (int i = 0; i < argc; ++i) {
+    for (int i = 1; i < argc; ++i) {
         wLogger.Log(argv[i]);
+        InputFileName = argv[i];
     }
-    //printf("\n\n");
+    
+    if (InputFileName == nullptr) InputFileName = "test/simple_grammar.txt";
 }

@@ -52,8 +52,6 @@ public:
         return token;     
 
     Token Lex() {
-        assert(active_token_ < tokens_.Size());
-
         char c = 0;
         while (std::isspace(c = Getc())) 
             ;
@@ -232,7 +230,9 @@ public:
 
             auto res = keyword_table_.Find(str);
             if (res != nullptr) {
+#ifdef WOLF_DB_LOG_KEYWORD
                 wLogger.Log(InputFileName, line_, column_, "Is key word! Auuuuuuu!!!");
+#endif
                 token.value.Keyword = *res;
                 ReturnToken(wKeyword);
             } else {

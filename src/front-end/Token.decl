@@ -3,7 +3,8 @@ DeclToken(None       , 0)
 DeclToken(LexerError , 1)
 DeclToken(Fail       , 2)
 DeclToken(EOF        , 3)
-DeclToken(Keyword    , 4)
+DeclToken(Empty      , 4)
+DeclToken(Keyword    , 5)
 
 DeclToken(ID         , 10)
 DeclToken(Letter     , 11)
@@ -30,6 +31,7 @@ DeclToken(DeclToken    , 204)
 DeclToken(Rule         , 205)
 DeclToken(Depend       , 206)
 
+DeclToken(Block        , 250)
 
 // Don't change order. Dependency in sematic analysis
 DeclToken(Block1N      , 300) // [ ]+

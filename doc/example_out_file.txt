@@ -18,8 +18,80 @@ union wTokenUnion {
 }
 
 // Rules
-wToken wParser::GetRule1() {
+wToken wParser::GetRuleName() {
+    Init(RuleName);
 
+    // Simple Depend
+    Get(Depend1);
+    {
+        // Code;
+    }
+
+    // [ ]
+
+    // [ ]+
+    if (!View() ...)
+
+    while (View() ...) {
+        Get(Depend1);
+        {
+
+        }
+
+        GetDepend(Depend2);
+        {
+
+        }
+        ...
+    }
+
+    // [ ]*
+    while (View() ...) {
+        Get(Depend1);
+        {
+
+        }
+
+        GetDepend(Depend2);
+        {
+
+        }
+        ...
+    }
+
+    // [ ]~
+    if (View() ...) {
+        Get(Depend1);
+        {
+
+        }
+
+        GetDepend(Depend2);
+        {
+
+        }
+        ...
+    }
+
+    // [ ]?
+    View();
+    switch (token.type)
+    case wTokenType::w: {
+
+    } break;
+
+    // [ ]?+
+
+    // [ ]?*
+
+    // [ ]?~
+
+
+    Success();
+}
+
+wToken wParser::GetRule1() {
+        
 }
 
 wToken wParser::GetRule2() {

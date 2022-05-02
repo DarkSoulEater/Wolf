@@ -27,6 +27,7 @@ public:
         wToken ret(0, 0, wTokenType::w##NAME);      \
         wToken token = lexer_.GetToken();           \
                                                     \
+                                                    \
         if (token.type != wTokenType::w##NAME){     \
             Error(ret, token, "");                 }\
         return token;                               \
@@ -56,7 +57,12 @@ public:
 
     #define Success() return ret_val; 
 
-    #define Get(TYPE) ((token = Get##TYPE()).type == wTokenType::w##TYPE)
+    #define Get(TYPE)                       \
+        token = Get##TYPE();                \
+        //ret_val.next.Combining(token.next); \
+                                          
+    //((token = Get##TYPE()).type == wTokenType::w##TYPE)
+
     #define View(TYPE) ((token = lexer_.ViewToken()).type == wTokenType::w##TYPE)
     #define error(TEXT) Error(ret_val, token, TEXT)
 
@@ -372,6 +378,18 @@ private:
                 wLogger.PrintError(InputFileName, target->data_.line, target->data_.column, "there is no rule generating <%s>, lone wolf", target->data_.value.ID);
             }
         }
+
+        for (i = 0; i < node->kids_.Size(); ++i) {
+            wNode* kid = node->kids_[i];
+            if (kid->data_.type == wTokenType::wRule) {
+                auto res = target_token_.Find(kid->kids_[0]->data_.value.ID);
+                if (!res && FlagSkipUselessRule) {
+                    kid->data_.type = wTokenType::wNone;
+
+                    wLogger.PrintWarning(InputFileName, kid->data_.line, kid->data_.column, "<%s> is a useless rule, dead wolf", kid->kids_[0]->data_.value.ID);
+                }
+            }
+        }
     }
 
     void AnalysisRule(wNode* node, wNode* parent) {
@@ -403,6 +421,8 @@ private:
 
                 if (node->data_.type != wTokenType::wBlockQ) {
                     node->data_.type = wTokenType((int)node->data_.type - 4);
+                } else {
+                    node->data_.type = wTokenType::wBlock;
                 }
 
                 return;
