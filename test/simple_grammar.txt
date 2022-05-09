@@ -1,29 +1,18 @@
 // Lexer
 %union {
-
+    int val;
+    wNode* node;
 }
 
-%token <ID>
-%token <Letter>
-%token <Code>
-%token <Keyword>
+%token <Dig>
 
 %%
 
 // Parser 
-<G> : [<Preamble>]~ <Declarations> [<Rule>]+
+<G> : [<Exp>{InsertNode();}]~
 ;
 
-<Preamble> : '#' <Code> '#'
-;
-
-<Declarations> : [<Keyword> [<Code> | <ID>]?]*
-;
-
-<Rule> : <ID> {} ':' <Depend>
-;
-
-<Depend> : [[<ID> | <Letter> | '[' <Depend> ']'   ['+' | '*' | '~' | '?' ['+' | '*' | '~']~]?~]? [<Code>]~]+ ['|' <Depend>]*
+<Exp> : '(' <Exp>{InsertNode();} [ ['+'{InsertToken();} | '-'{InsertToken();}]? <Exp>{InsertNode();}]~ ')' | <Dig>{InsertToken();}
 ;
 
 %%

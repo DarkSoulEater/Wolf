@@ -17,6 +17,14 @@ struct MapString32{
         return strcmp(str, rhs.str) == 0;
     }
 
+    bool operator<(const MapString32& rhs) const {
+        return strcmp(str, rhs.str) < 0;
+    }
+
+    bool operator>(const MapString32& rhs) const {
+        return strcmp(str, rhs.str) > 0;
+    }
+
     char& operator[](size_t i) {
         return str[i];
     }

@@ -34,7 +34,7 @@ else
 endif
 
 # Search for source files
-SRC_FULL_PATH = $(shell where /r .\ *.cpp)
+SRC_FULL_PATH = $(shell where /r .\src *.cpp)
 EXLUDED = # Excluded files
 SRC = $(filter-out $(EXLUDED),$(notdir $(SRC_FULL_PATH)))
 OBJ = $(addprefix $(BIN_DIR)/, $(SRC:.cpp=.o))
@@ -64,7 +64,7 @@ VPATH = echo $(subst \,/,$(dir $(SRC_FULL_PATH)))
 # Build project
 $(BUILD_PATH)/$(OUT_FILE_NAME): $(OBJ) Makefile
 	$(CC) $(OBJ) -o $(BUILD_PATH)/$(OUT_FILE_NAME) $(LXXFLAGS)
-	$(BUILD_PATH)/$(OUT_FILE_NAME)
+#$(BUILD_PATH)/$(OUT_FILE_NAME)
 
 # Dependency checking
 include $(addprefix $(BIN_DIR)/, $(SRC:.cpp=.d))

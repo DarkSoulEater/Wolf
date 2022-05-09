@@ -31,8 +31,8 @@ DeclToken(DeclToken    , 204)
 DeclToken(Rule         , 205)
 DeclToken(Depend       , 206)
 
-DeclToken(Block        , 250)
-
+// Don't change order. Dependency in sematic analysis
+DeclToken(Block        , 299)
 // Don't change order. Dependency in sematic analysis
 DeclToken(Block1N      , 300) // [ ]+
 DeclToken(Block0N      , 301) // [ ]*

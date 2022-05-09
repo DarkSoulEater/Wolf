@@ -1,5 +1,5 @@
 // Lexer
-<Comment> : '/' '*' <any> '*' '/' | '/' '/' <any> '\n' // TODO
+<Comment> : '/' '*' <any> '*' '/' | '/' '/' <any> '\n' // TODO not 
 <Letter> : 'a' - 'z' | 'A' - 'Z'
 <Digit> : '0' - '9'
 <Percent> : '%' '%'

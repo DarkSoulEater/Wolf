@@ -11,11 +11,11 @@ public:
 
     void Log(const char* text); // In stdout
     void Log(const char* file_name, size_t line, size_t column, const char* text); // In stdout
-    //void PrintLog(const char* format, ...); In stdout
+    //void Log(const char* format, ...); // In stdout
 
     void LogDebug(const char* text); // In stderr
     void LogDebug(const char* file_name, size_t line, size_t column, const char* text); // In stderr
-    //void PrintDebug(const char* format, ...); // In stderr
+    void PrintDebug(const char* format, ...); // In stderr
 
     void LogError(const char* text); // In stderr
     void LogError(const char* file_name, size_t line, size_t column, const char* text); // In stderr

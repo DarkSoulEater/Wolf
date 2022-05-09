@@ -40,6 +40,15 @@ void Logger::LogDebug(const char* file_name, size_t line, size_t column, const c
     std::cerr << file_name << ':' << line << ':' << column << ": " << MAGNETA"Debug: "NONE << text << std::endl;
 }
 
+void Logger::PrintDebug(const char* format, ...) {
+    assert(format);
+    va_list message;
+    va_start(message, format);
+    std::cerr << MAGNETA"Debug: "NONE;
+    vfprintf(stderr, format, message);
+    std::cerr << std::endl;
+}
+
 // -------------------- Error -----------------------
 void Logger::LogError(const char* text) {
     std::cerr << RED"Error: "NONE << text << std::endl;

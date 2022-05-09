@@ -22,10 +22,11 @@ private:
 
     SetNode* head_ = nullptr;
 
-    void CopyTree(SetNode* parent, SetNode*& dst_node, SetNode* src_node) {
+    void CopyTree(SetNode* parent, SetNode*& dst_node, const SetNode* src_node) {
         if (src_node == nullptr) return;
 
-        dst_node = new SetNode(dst_node->value, parent);
+        dst_node = new SetNode(src_node->value, parent);
+        assert(dst_node);
 
         CopyTree(dst_node, dst_node->left, src_node->left);
         CopyTree(dst_node, dst_node->right, src_node->right);
@@ -34,6 +35,14 @@ public:
     Set() {}
 
     Set(const Set& set) {
+        size_ = set.size_;
+
+        std::cout << "Tokens set\n";
+        for (const auto& u: set) {
+            std::cout << (int)u << "\n";
+        }
+        std::cout << "end\n";
+
         CopyTree(nullptr, head_, set.head_);
     }
 
@@ -46,18 +55,25 @@ public:
         delete head_;
     }
 
-    void Insert(const T& value) {
+    Set& operator=(const Set& set) {
+        size_ = set.size_;
+        // TODO: delete old tree
+        CopyTree(nullptr, head_, set.head_);
+    }
+
+    bool Insert(const T& value) {
         SetNode* node = head_;
         SetNode* parent = head_;
 
         if (head_ == nullptr) {
             head_ = new SetNode(value, nullptr);
-            return;
+            ++size_;
+            return true;
         }
 
         while (node != nullptr) {
             if (node->value == value)
-                return;
+                return false;
 
             parent = node;
 
@@ -76,6 +92,7 @@ public:
         }
 
         ++size_;
+        return true;
     }
 
     bool Find(const T& value) const {
@@ -113,12 +130,15 @@ public:
         return s;*/
     }
 
-    void Combining(const Set& other_set) {
-        if (other_set.Size() == 0) return;
+    // true if intersection size == 0
+    bool Combining(const Set& other_set) {
+        if (other_set.Size() == 0) return true;
+
+        bool res = true;
         for (auto u : other_set) {
-            //Insert(u);
-            //printf("OK\n");
+            res &= Insert(u);
         }
+        return res;
     }
 
     /*#define DUMP_PATH "doc/dump/"

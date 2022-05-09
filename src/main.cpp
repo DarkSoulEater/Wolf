@@ -4,6 +4,7 @@
 #include "Parser.hpp"
 #include "Generator.hpp"
 #include "Global.hpp"
+#include <set>
 
 #include "Set.hpp"
 
@@ -23,9 +24,10 @@ int main(const int argc, const char* argv[]) {
     auto token = parser.StartParce();
     
     if (token.type != wTokenType::wFail) {
-        wGenerator generator(token.value.Node);
-        generator.Generate("doc/res/out.txt");
+        wGenerator generator(token.value.Node, parser);
+        generator.Generate("C:/Users/eleno/C++/Wolf/wolf_parser/Parser.cpp");
     } else printf("ERR");
+
     return 0;
 }
 
@@ -35,5 +37,5 @@ void ParseArgs(const int argc, const char* argv[]) {
         InputFileName = argv[i];
     }
     
-    if (InputFileName == nullptr) InputFileName = "test/simple_grammar.txt";
+    if (InputFileName == nullptr) InputFileName = "C:/Users/eleno/C++/Wolf/test/simple_grammar.txt";
 }

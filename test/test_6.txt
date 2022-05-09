@@ -11,8 +11,8 @@
 %%
 
 // Parser 
-//<G> : [<Preamble>]~ <Declarations> [<Rule>]+
-//;
+<G> : [<Preamble>]~ <Declarations> [<Rule>]+
+;
 
 <Preamble> : '#' <Code> '#'
 ;
@@ -20,10 +20,10 @@
 <Declarations> : [<Keyword> [<Code> | <ID>]?]*
 ;
 
-/*<Rule> : <ID> {} ':' <Depend>
+<Rule> : <ID> {} ':' <Depend>
 ;
 
 <Depend> : [[<ID> | <Letter> | '[' <Depend> ']'   ['+' | '*' | '~' | '?' ['+' | '*' | '~']~]?~]? [<Code>]~]+ ['|' <Depend>]*
-;*/
+;
 
 %%

@@ -40,3 +40,5 @@ doc/dump
 doc/res
 prototype
 src/main0.cpp
+wolf_parser
+test
